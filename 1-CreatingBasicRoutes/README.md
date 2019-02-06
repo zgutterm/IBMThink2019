@@ -20,7 +20,8 @@ Navigate to the pom.xml in the root directory of the project.
 
 Add the `camel-core` and `camel-sprint` dependencies to the project
 
-```<!-- TODO add camel dependencies -->
+```
+<!-- TODO add camel dependencies -->
 <dependency>
   <groupId>org.apache.camel</groupId>
   <artifactId>camel-core</artifactId>
@@ -95,7 +96,8 @@ public void configure() throws Exception {
 
 In a terminal, navigate to the `IBMThink2019/1-CreatingBasicRoutes/processing-orders` and run the `setup-data.sh` script:
 
-```[student@workstation processing-orders]$ ./setup-data.sh
+```
+[student@workstation processing-orders]$ ./setup-data.sh
 ...
 'Preparation complete!'
 ```
