@@ -36,9 +36,9 @@ Note that no version element is specified. This is because the version is inheri
 
 Save the changes.
 
-### Write Your Camel Route.
+## Write Your Camel Route.
 
-##Extend the FileRouteBuilder class with RouteBuilder
+### Extend the FileRouteBuilder class with RouteBuilder
 Open the `FileRouteBuilder` class in your IDE.
 
 Update the class to extend `org.apache.camel.builder.RouteBuilder` and ensure that you are importing this package.
@@ -55,7 +55,7 @@ public class FileRouteBuilder extends RouteBuilder{
 ```
 
 
-## Implement the configure method
+### Implement the configure method
 
 1. The superclass requires the implementation of the configure method. Add an empty method:
 
@@ -91,7 +91,7 @@ public void configure() throws Exception {
 
 4. Save your changes.
 
-## Populate the orders/incoming directory
+### Populate the orders/incoming directory
 
 In a terminal, navigate to the `IBMThink2019/1-CreatingBasicRoutes/processing-orders` and run the `setup-data.sh` script:
 
@@ -107,9 +107,9 @@ Verify that the order xml files were generated in the correct folder:
 noop-1.xml  order-2.xml  order-3.xml  order-4.xml  order-5.xml  order-6.xml
 ```
 
-### Run and Test Your Camel Route
+## Run and Test Your Camel Route
 
-## Test the Route
+### Test the Route
 
 1. Run the route by using the camel:run Maven goal:
 
