@@ -150,3 +150,11 @@ INFO  Apache Camel 2.21.0.fuse-000077-redhat-1 (CamelContext: jb421Context) is s
 ```
 
 5. Terminate the route using `Ctrl+C` in the terminal where the route is running. If you are using JBDS/Eclipse, right click on the project and click `Close Project`.
+
+## Extra Credit
+
+Having your Camel route completely crash whenever there is a duplicate order isn't a very good design. Take a look at the `file` component documentation here: http://camel.apache.org/file2.html
+
+What are some better implementations?
+
+Update the route to safely handle duplicate orders.
