@@ -32,8 +32,8 @@ The Aloha service should take a single parameter so that requests to the `/aloha
 ```java
 @Override
 public void configure() throws Exception {
-		//TODO implement the rest service
-		rest("/aloha")
+    //TODO implement the rest service
+    rest("/aloha")
 
 }
 ```
@@ -43,9 +43,9 @@ public void configure() throws Exception {
 ```java
 @Override
 public void configure() throws Exception {
-		//TODO implement the rest service
-		rest("/aloha")
-			.get("{name}")
+  //TODO implement the rest service
+  rest("/aloha")
+    .get("{name}")
 
 }
 ```
@@ -55,10 +55,10 @@ public void configure() throws Exception {
 ```java
 @Override
 public void configure() throws Exception {
-		//TODO implement the rest service
-		rest("/aloha")
-			.get("{name}")
-			   .produces("application/json");
+  //TODO implement the rest service
+  rest("/aloha")
+    .get("{name}")
+      .produces("application/json");
 }
 ```
 
@@ -73,13 +73,13 @@ public void configure() throws Exception {
 ```java
 rest("/aloha")
   .get("{name}")
-	  .produces("application/json")
+    .produces("application/json")
 
 //TODO add a direct route for printing the greeting
 from("direct:sayHello").routeId("HelloREST")
-	.setBody().simple("{\n"
-	    + "  greeting: Aloha, ${header.name}\n"
-	    + "}\n");
+  .setBody().simple("{\n"
+      + "  greeting: Aloha, ${header.name}\n"
+      + "}\n");
 ```
 
 4.  Finally, add a `to` at the end of the REST route to connect the two routes:
@@ -87,17 +87,17 @@ from("direct:sayHello").routeId("HelloREST")
 ```java
 @Override
 public void configure() throws Exception {
-	//TODO implement the rest service
-	rest("/aloha")
-		.get("{name}")
-		  .produces("application/json")
-		  .to("direct:sayHello");
+  //TODO implement the rest service
+  rest("/aloha")
+    .get("{name}")
+      .produces("application/json")
+      .to("direct:sayHello");
 
   //TODO add a direct route for printing the greeting
-	from("direct:sayHello").routeId("HelloREST")
-		.setBody().simple("{\n"
-		    + "  greeting: Aloha, ${header.name}\n"
-		    + "}\n");
+  from("direct:sayHello").routeId("HelloREST")
+    .setBody().simple("{\n"
+        + "  greeting: Aloha, ${header.name}\n"
+        + "}\n");
 }
 ```
 
