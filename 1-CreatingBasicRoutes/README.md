@@ -3,24 +3,24 @@
 In this exercise, you will be writing a Camel route that is capable of receiving multiple "order" files, ensuring that there are no duplicates, and then placing them into another folder using the `file` component.
 
 ## Prerequisites
-Ensure that you have Maven installed.
+- Ensure that you have Maven installed.
 
-Clone the lab repository (or download it as a ZIP):
+- Clone the lab repository (or download it as a ZIP):
 ```
   $ git clone https://github.com/zgutterm/IBMThink2019.git
 ```
-Using your favorite IDE, import or open the `IBMThink2019/1-CreatingBasicRoutes/processing-orders` project.
+- Using your favorite IDE, import or open the `IBMThink2019/1-CreatingBasicRoutes/processing-orders` project.
 
-If using JBoss Developer Studio, click File -> Import -> Maven -> Existing Maven Projects and click Next. Navigate to `IBMThink2019/1-CreatingBasicRoutes/processing-orders` and click Ok. It may take a few moments for Maven to download the project dependencies.
+- If using JBoss Developer Studio, click File -> Import -> Maven -> Existing Maven Projects and click Next. Navigate to `IBMThink2019/1-CreatingBasicRoutes/processing-orders` and click Ok. It may take a few moments for Maven to download the project dependencies.
 
 Note: Your project will import with errors. This is expected. You will resolve these errors in this exercise.
 
 ## Update the pom.xml File
-Navigate to the pom.xml in the root directory of the project.
+1. Navigate to the pom.xml in the root directory of the project.
 
-Add the `camel-core` and `camel-sprint` dependencies to the project
+2. Add the `camel-core` and `camel-sprint` dependencies to the project
 
-```
+```xml
 <!-- TODO add camel dependencies -->
 <dependency>
   <groupId>org.apache.camel</groupId>
@@ -33,18 +33,18 @@ Add the `camel-core` and `camel-sprint` dependencies to the project
 </dependency>
 ```
 
-Note that no version element is specified. This is because the version is inherited from the jboss-fuse-parent bill of materials (BOM) included the parent project pom.xml file.
+Note: No version element is specified. This is because the version is inherited from the `jboss-fuse-parent` bill of materials (BOM) included the parent project `pom.xml` file.
 
-Save the changes.
+3. Save the changes.
 
 ## Write Your Camel Route.
 
 ### Extend the FileRouteBuilder class with RouteBuilder
-Open the `FileRouteBuilder` class in your IDE.
+1. Open the `FileRouteBuilder` class in your IDE.
 
-Update the class to extend `org.apache.camel.builder.RouteBuilder` and ensure that you are importing this package.
+2. Update the class to extend `org.apache.camel.builder.RouteBuilder` and ensure that you are importing this package.
 
-```
+```java
 import org.apache.camel.builder.RouteBuilder;
 
 //TODO: Enable the route by extending the RouteBuilder superclass
@@ -60,7 +60,7 @@ public class FileRouteBuilder extends RouteBuilder{
 
 1. The superclass requires the implementation of the configure method. Add an empty method:
 
-```
+```java
 //TODO Implement the configure method
 @Override
 public void configure() throws Exception {
@@ -73,7 +73,7 @@ public void configure() throws Exception {
 Configure the endpoint to consume from the orders/incoming directory and use the include option to configure the endpoint to consume only XML files where the name starts with `order`:
 
 
-```
+```java
 public void configure() throws Exception {
   from("file:orders/incoming?include=order.*xml")
 }
@@ -81,9 +81,9 @@ public void configure() throws Exception {
 
 3. Add a file producer to the route using the `file:` component.
 
-Configure the endpoint to create the outgoing files to the orders/outgoing folder. The route must throws a GenericFileOperationException exception if a duplicate file is provided in the orders/incoming folder.
+Configure the endpoint to create the outgoing files to the `orders/outgoing` folder. The route must throws a `GenericFileOperationException` exception if a duplicate file is provided in the `orders/incoming` folder.
 
-```
+```java
 public void configure() throws Exception {
   from("file:orders/incoming?include=order.*xml")
     .to("file:orders/outgoing?fileExist=Fail");
@@ -96,7 +96,7 @@ public void configure() throws Exception {
 
 In a terminal, navigate to the `IBMThink2019/1-CreatingBasicRoutes/processing-orders` and run the `setup-data.sh` script:
 
-```
+```sh
 [student@workstation processing-orders]$ ./setup-data.sh
 ...
 'Preparation complete!'
@@ -104,7 +104,7 @@ In a terminal, navigate to the `IBMThink2019/1-CreatingBasicRoutes/processing-or
 
 Verify that the order xml files were generated in the correct folder:
 
-```
+```sh
 [student@workstation processing-orders]$ ls orders/incoming
 noop-1.xml  order-2.xml  order-3.xml  order-4.xml  order-5.xml  order-6.xml
 ```
@@ -115,14 +115,14 @@ noop-1.xml  order-2.xml  order-3.xml  order-4.xml  order-5.xml  order-6.xml
 
 1. Run the route by using the camel:run Maven goal:
 
-```
+```sh
 [student@workstation processing-orders]$ mvn clean camel:run
 ```
 
 
 2. Open a new terminal window and inspect the orders/outgoing folder to verify that only order files are available:
 
-```
+```sh
 [student@workstation processing-orders]$ ls orders/outgoing
 order-2.xml  order-3.xml  order-4.xml  order-5.xml  order-6.xml
 ```
@@ -131,7 +131,7 @@ Notice that the file named `noop-1.xml` is not present.
 
 3. Run the `./duplicate-files.sh` script in the `processing-orders` directory to recreate the files to trigger a duplicate file error.
 
-```
+```sh
 [student@workstation processing-orders]$ ./duplicate-files.sh
 ...
 'Duplication complete!'
@@ -139,7 +139,7 @@ Notice that the file named `noop-1.xml` is not present.
 
 4. Return to the terminal running the Camel route to see the `GenericFileOperationException` as a result of the duplicate files.
 
-```
+```sh
 INFO  Received hang up - stopping the main instance.
 ...
 INFO  Route: route1 shutdown complete, was consuming from: file://orders/incoming?include=order.*xml
