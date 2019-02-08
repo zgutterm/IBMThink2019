@@ -3,118 +3,121 @@
 In this exercise, you will implement and execute two Camel-based microservices. The first service, the aloha service, returns a simple greeting. The second service behaves similarly, but includes an endpoint that calls the aloha service.
 
 ## Prerequisites
-Ensure that you have Maven installed.
 
-Clone the lab repository (or download it as a ZIP):
-```
-  $ git clone https://github.com/zgutterm/IBMThink2019.git
-```
-Using your favorite IDE, import or open the `IBMThink2019/2-CamelREST/camel-microservices/hola-service` project and `IBMThink2019/2-CamelREST/camel-microservices/aloha-service` project.
+-   Ensure that you have Maven installed.
 
-If using JBoss Developer Studio, click File -> Import -> Maven -> Existing Maven Projects and click Next. Navigate to `IBMThink2019/2-CamelREST/camel-microservices/hola-service` and click Ok. It may take a few moments for Maven to download the project dependencies.
+-   Clone the lab repository (or download it as a ZIP):
 
-Similarly, import the `IBMThink2019/2-CamelREST/camel-microservices/aloha-service` project.
 
-The `hola-service` will have errors. You will resolve this at a later step.
+      $ git clone https://github.com/zgutterm/IBMThink2019.git
+
+-   Using your favorite IDE, import or open the `IBMThink2019/2-CamelREST/camel-microservices/hola-service` project and `IBMThink2019/2-CamelREST/camel-microservices/aloha-service` project.
+
+-   If using JBoss Developer Studio, click File -> Import -> Maven -> Existing Maven Projects and click Next. Navigate to `IBMThink2019/2-CamelREST/camel-microservices/hola-service` and click Ok. It may take a few moments for Maven to download the project dependencies.
+
+-   Similarly, import the `IBMThink2019/2-CamelREST/camel-microservices/aloha-service` project.
+
+Note: The `hola-service` will have errors. You will resolve this at a later step.
 
 ## Implement the Aloha service
 
 ### Create the REST service
 
-The Aloha service should take a single parameter so that requests to the `/aloha` service will return "Hello, {name}".
+The Aloha service should take a single parameter so that requests to the `/aloha` service will return `"Hello, {name}"`.
 
-Navigate to the aloha-service/src/main/java/com/redhat/training/jb421/RestRouteBuilder.java file.
+1.  Navigate to the `aloha-service/src/main/java/com/redhat/training/jb421/RestRouteBuilder.java` file.
 
-Create an endpoint at `/aloha` in the `configure()` method:
+2.  Create an endpoint at `/aloha` in the `configure()` method:
 
-```
+```java
 @Override
 public void configure() throws Exception {
 		//TODO implement the rest service
 		rest("/aloha")
 
-	}
+}
 ```
 
+3.  Set the GET method with a `name` parameter:
 
-Set the GET method with a `name` parameter:
-
-```
+```java
 @Override
 public void configure() throws Exception {
 		//TODO implement the rest service
 		rest("/aloha")
 			.get("{name}")
 
-	}
+}
 ```
 
-Configure the service to produce `application/json`:
+4.  Configure the service to produce `application/json`:
 
-```
+```java
 @Override
-	public void configure() throws Exception {
+public void configure() throws Exception {
 		//TODO implement the rest service
 		rest("/aloha")
 			.get("{name}")
-			.produces("application/json");
-	}
+			   .produces("application/json");
+}
 ```
 
 ### Format the Aloha Service Response
 
-The endpoint now accepts a parameter at `/aloha`, but doesn't provide any kind of response.
+1.  The endpoint now accepts a parameter at `/aloha`, but doesn't provide any kind of response.
 
-The `direct` component is a simple way to connect two routes synchronously. In this instance, we can use this component to return our greeting.
+2.  The `direct` component is a simple way to connect two routes synchronously. In this instance, we can use this component to return our greeting.
 
-In the same `configure()` method below the `rest` route, add a route `from` "sayHello" and set the name of the route as `HelloREST`.
+3.  In the same `configure()` method below the `rest` route, add a route `from` "sayHello" and set the name of the route as `HelloREST`.
 
+```java
+rest("/aloha")
+  .get("{name}")
+	  .produces("application/json")
+
+//TODO add a direct route for printing the greeting
+from("direct:sayHello").routeId("HelloREST")
+	.setBody().simple("{\n"
+	    + "  greeting: Aloha, ${header.name}\n"
+	    + "}\n");
 ```
-    rest("/aloha")
-			.get("{name}")
-			.produces("application/json")
 
-    //TODO add a direct route for printing the greeting
-		from("direct:sayHello").routeId("HelloREST")
-			.setBody().simple("{\n"
-			    + "  greeting: Aloha, ${header.name}\n"
-			    + "}\n");
-```
+4.  Finally, add a `to` at the end of the REST route to connect the two routes:
 
-Finally, add a `to` at the end of the REST route to connect the two routes:
-
-```
+```java
 @Override
-	public void configure() throws Exception {
-		//TODO implement the rest service
-		rest("/aloha")
-			.get("{name}")
-			.produces("application/json")
-			.to("direct:sayHello");
-		//TODO add a direct route for printing the greeting
-		from("direct:sayHello").routeId("HelloREST")
-			.setBody().simple("{\n"
-			    + "  greeting: Aloha, ${header.name}\n"
-			    + "}\n");
-	}
+public void configure() throws Exception {
+	//TODO implement the rest service
+	rest("/aloha")
+		.get("{name}")
+		  .produces("application/json")
+		  .to("direct:sayHello");
+
+  //TODO add a direct route for printing the greeting
+	from("direct:sayHello").routeId("HelloREST")
+		.setBody().simple("{\n"
+		    + "  greeting: Aloha, ${header.name}\n"
+		    + "}\n");
+}
 ```
 
-Save the file.
+5.  Save the file.
 
 Now when you call the aloha-service using an HTTP GET request, the service returns with:
 
-```
+```json
 {
   greeting: Aloha, Developer
 }
 ```
 
 ## Update the pom.xml File
+
 To use the health check endpoints, we need to add the Spring Boot Actuator dependency. This enables the `/health` endpoint.
 
-Navigate to the pom.xml for EACH project and add the following dependency:
+1.  Navigate to the pom.xml for EACH project and add the following dependency:
 
-```
+```xml
 <!--TODO Add Spring Boot Actuator Starter -->
 <dependency>
   <groupId>org.springframework.boot</groupId>
@@ -122,14 +125,13 @@ Navigate to the pom.xml for EACH project and add the following dependency:
 </dependency>
 ```
 
-
 ## Update the Hola Service to Call the Aloha Service
 
 ### Update the pom.xml file to use the `camel-http4` component.
 
 Navigate to the pom.xml for `hola-service` and add the following dependency:
 
-```
+```xml
 <!--TODO Add camel-http4 component-->
 <dependency>
   <groupId>org.apache.camel</groupId>
@@ -139,11 +141,13 @@ Navigate to the pom.xml for `hola-service` and add the following dependency:
 
 ### Implement the REST service call
 
-Open the `hola-service/src/main/java/com/redhat/training/jb421/RestRouteBuilder.java` file.
+1.  Open the `hola-service/src/main/java/com/redhat/training/jb421/RestRouteBuilder.java` file.
 
-In order to reach the aloha service, you need to know the port and host name of the service is running on. Update the `alohaHost` and `alohaPort` variables by injecting the values form the `application.properties` file.
+In order to reach the aloha service, you need to know the port and host name of the service is running on.
 
-```
+2.  Update the `alohaHost` and `alohaPort` variables by injecting the values from the `application.properties` file.
+
+```java
 //TODO Inject value from configuration
 @Value("${alohaHost}")
 private String alohaHost;
@@ -153,19 +157,26 @@ private String alohaHost;
 private String alohaPort;
 ```
 
-The hola-chained Camel route originally starts with a REST DSL endpoint. Because of this, it is necessary to modify some of the exchange headers that are set on the exchange by the REST DSL. The camel-http4 component shares a few of the headers set by the REST DSL, so we need to make sure their values are set properly for the outgoing call to the aloha-service instead of being set for the incoming REST call.
+The `hola-chained` Camel route originally starts with a REST DSL endpoint.
+Because of this, it is necessary to modify some of the exchange headers that are
+set on the exchange by the REST DSL. The `camel-http4` component shares a few
+of the header values set by the REST DSL, so we need to make sure their values
+are set properly for the outgoing call to the `aloha-service` instead of being
+set for the incoming REST call.
 
-Unset the header value Exchange.HTTP_URI:
+1.  Unset the header value Exchange.HTTP_URI:
 
-```
+```java
 from("direct:callAloha")
   //TODO remove header Exchange.HTTP_URI
   .removeHeader(Exchange.HTTP_URI)
 ```
 
-Set the header value Exchange.HTTP_PATH using the header.name value that was passed into the hola-chained endpoint originally to pass the name onto the aloha-service.
+2.  Set the header value `Exchange.HTTP_PATH`using the `header.name` value that was
+    passed into the `hola-chained` endpoint originally to forward the name on to the
+    `aloha-service`.
 
-```
+```java
 from("direct:callAloha")
   //TODO remove header Exchange.HTTP_URI
   .removeHeader(Exchange.HTTP_URI)
@@ -173,9 +184,9 @@ from("direct:callAloha")
   .setHeader(Exchange.HTTP_PATH,simple("${header.name}"))
 ```
 
-Finally, update the component from mock to http4 in the route's producer:
+3.  Finally, update the component from `mock` to `http4` in the route's producer:
 
-```
+```java
 from("direct:callAloha")
   //TODO remove header Exchange.HTTP_URI
   .removeHeader(Exchange.HTTP_URI)
@@ -187,39 +198,47 @@ from("direct:callAloha")
 
 ## Implement a custom health check to verify database connectivity
 
-Open the `DatabaseHealthCheck.java` file in the `hola-service` project. This class is responsible for ensuring that there is a connection to the database. This class implements the HealthIndicator interface, which the Spring Boot Actuator starter provides. The HealthIndicator interface requires a single method named health().
+1. Open the `DatabaseHealthCheck.java` file in the `hola-service` project. This
+class is responsible for ensuring that there is a connection to the database.
+This class implements the `HealthIndicator` interface, which the Spring Boot
+Actuator starter provides. The `HealthIndicator` interface requires a single
+method named `health()`.
 
-Note: This service doesn't actually use the database (yet) so this health check is purely demonstrating the capability of the health check, but doesn't actually apply to the health of this service.
+Note: This service doesn't actually use the database (yet) so this health check
+is purely demonstrating the capability of the health check, but doesn't actually
+apply to the health of this service.
 
-Update the return statements to include a status of UP or DOWN depending on whether or not an exception occurred connecting to the database:
+2. Update the return statements to include a status of `UP` or `DOWN` depending on
+whether or not an exception occurred connecting to the database:
 
-```
+```java
 try {
-      EntityManager entityManager = entityManagerFactory.createEntityManager();
-      Query q = entityManager.createNativeQuery("select 1");
-      q.getFirstResult();
-      //TODO return status of UP
-      return Health.up().build();
-    }catch(Exception e) {
-      //TODO return status of DOWN
-      return Health.down(e).build();
-    }
+    EntityManager entityManager = entityManagerFactory.createEntityManager();
+    Query q = entityManager.createNativeQuery("select 1");
+    q.getFirstResult();
+   //TODO return status of UP
+   return Health.up().build();
+}catch(Exception e) {
+  //TODO return status of DOWN
+  return Health.down(e).build();
+}
 ```
-
-Save the file.
+3. Save the file.
 
 ## Test the Services
 
 ### Test the Aloha Service
-Run the aloha-service Spring Boot application and verify that all expected endpoints are active.
 
-Navigate to the `camel-microservices/aloha-service` directory and run `mvn package`:
+Run the `aloha-service` Spring Boot application and verify that all expected
+endpoints are active.
 
-```
+1. Navigate to the `camel-microservices/aloha-service` directory and run `mvn package`:
+
+```sh
 [student@workstation aloha-service]$ mvn package
 ...
 [INFO] Scanning for projects...
-[INFO]                                                                         
+[INFO]
 [INFO] ------------------------------------------------------------------------
 [INFO] Building GE: Developing Microservices with Camel Routes - Aloha Service 1.0
 [INFO] ------------------------------------------------------------------------
@@ -234,34 +253,22 @@ Navigate to the `camel-microservices/aloha-service` directory and run `mvn packa
 ...
 ```
 
-Run the Spring Boot application using the java -jar command. Leave the application running, and notice the log messages from XML route:
+2. Run the Spring Boot application using the java -jar command. Leave the
+application running, and notice the log messages from XML route:
 
 ```
 [student@workstation aloha-service]$ java -jar target/aloha-service-1.0.jar
 ...
-
-  .   ____          _            __ _ _
- /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
-( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
- \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
-  '  |____| .__|_| |_|_| |_\__, | / / / /
- =========|_|==============|___/=/_/_/_/
- :: Spring Boot ::       (v1.5.13.RELEASE)
-
-...
 16:52:57.384 [main] INFO  o.s.b.c.e.u.UndertowEmbeddedServletContainer - Undertow started on port(s) 8081 (http)
-16:52:57.388 [main] INFO  c.redhat.training.jb421.Application - Started Application in 8.235 seconds (JVM running for 8.934)
-
-...
+16:52:57.388 [main] INFO  c.redhat.training.jb421.Application - Started Application in 8.235 seconds (JVM running for 8.934
 ```
 
-Open another terminal and verify that the Spring Boot application responds to HTTP requests.
+3. Open another terminal window to verify that the Spring Boot application responds to HTTP requests.
 
-Invoke the curl command, using localhost as the host name with port 8081 and the /camel/hola/Developer resource URI:
+4. Invoke the curl command, using `localhost` as the host name with port `8081` and the `/camel/hola/Developer` resource URI:
 
-```
-[student@workstation aloha-service]$ curl -si \
-    http://localhost:8081/camel/aloha/Developer
+```sh
+[student@workstation aloha-service]$ curl -si http://localhost:8081/camel/aloha/Developer
 HTTP/1.1 200 OK
 ...
 {
@@ -270,29 +277,26 @@ HTTP/1.1 200 OK
 }
 ```
 
-Verify that the health endpoint is running.
+5. Verify that the health endpoint is running.  Invoke the curl command, using `localhost` as the host name with port `8181` and the `/health` resource URI:
 
-Invoke the curl command, using localhost as the host name with port 8181 and the /health resource URI:
-
-```
+```sh
 [student@workstation aloha-service]$ curl -si http://localhost:8181/health
 HTTP/1.1 200 OK
 ...
 {"status":"UP"}
 ```
 
-
 ### Test the Hola Service
 
-Run the hola-service Spring Boot application and verify that all expected endpoints are active.
+Run the `hola-service` Spring Boot application and verify that all expected endpoints are active.
 
-Navigate to the `camel-microservices/hola-service` directory and run `mvn package`:
+1. Navigate to the `camel-microservices/hola-service` directory and run `mvn package`:
 
-```
+```sh
 [student@workstation hola-service]$ mvn package
 ...
 [INFO] Scanning for projects...
-[INFO]                                                                         
+[INFO]
 [INFO] ------------------------------------------------------------------------
 [INFO] Building GE: Developing Microservices with Camel Routes - Hola Service 1.0
 [INFO] ------------------------------------------------------------------------
@@ -307,32 +311,26 @@ Navigate to the `camel-microservices/hola-service` directory and run `mvn packag
 ...
 ```
 
-Run the Spring Boot application using the java -jar command. Leave the application running, and notice the log messages from XML route:
+2. Run the Spring Boot application using the `java -jar` command. Leave the
+application running, and notice the log messages from XML route:
 
-```
+```sh
 [student@workstation aloha-service]$ java -jar target/hola-service-1.0.jar
 ...
-
-  .   ____          _            __ _ _
- /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
-( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
- \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
-  '  |____| .__|_| |_|_| |_\__, | / / / /
- =========|_|==============|___/=/_/_/_/
  :: Spring Boot ::       (v1.5.13.RELEASE)
-
 ...
 16:52:57.384 [main] INFO  o.s.b.c.e.u.UndertowEmbeddedServletContainer - Undertow started on port(s) 8081 (http)
 16:52:57.388 [main] INFO  c.redhat.training.jb421.Application - Started Application in 8.235 seconds (JVM running for 8.934)
-
 ...
 ```
 
-Open another terminal and verify that the Spring Boot application responds to HTTP requests.
+3. Open another terminal window to verify that the Spring Boot application
+responds to HTTP requests.
 
-Invoke the curl command, using localhost as the host name with port 8081 and the /camel/hola/Developer resource URI:
+4. Invoke the `curl` command, using `localhost` as the host name with port
+`8081` and the `/camel/hola/Developer` resource URI:
 
-```
+```sh
 [student@workstation hola-service]$ curl -si \
     http://localhost:8082/camel/hola/Developer
 HTTP/1.1 200 OK
@@ -342,11 +340,11 @@ HTTP/1.1 200 OK
 }
 ```
 
-Verify that the hola-chained endpoint is working properly and able to call the aloha-service.
+5. Verify that the `hola-chained` endpoint is working properly and able to call
+the `aloha-service`.  Invoke the `curl` command, using `localhost` as the host
+name with port `8082` and the `/camel/hola-chained/Developer` resource URI:
 
-Invoke the curl command, using localhost as the host name with port 8082 and the /camel/hola-chained/Developer resource URI:
-
-```
+```sh
 [student@workstation aloha-service]$ curl -si http://localhost:8082/camel/hola-chained/Developer
 HTTP/1.1 200 OK
 ...
@@ -355,25 +353,29 @@ HTTP/1.1 200 OK
 }
 ```
 
-This means that the endpoint from the Hola service is directing to the Aloha service instead.
+This means that the endpoint from the Hola service is directing to the Aloha
+service instead.
 
-Test the health endpoint for the hola service.
+6. Test the health endpoint for the `hola-service`.
 
-Invoke the curl command, using localhost as the host name with port 8182 and the /health resource URI:
+Invoke the `curl` command, using `localhost` as the host name with port `8182`
+and the `/health` resource URI:
 
-```
+```sh
 [student@workstation hola-service]$ curl -si http://localhost:8182/health
 HTTP/1.1 503 Service Unavailable
 ...
-
 {"status":"DOWN"}
 ```
-
-Uh oh, the service is down. This is because the health check includes our custom health check to ensure a database is enabled. Since we aren't actually using this database (yet), the service still technically functions when hitting the endpoints.
+Uh oh, the service is down. This is because the health check includes our custom
+health check to ensure a database is enabled. Since we aren't actually using
+this database (yet), the service still technically functions when hitting the
+endpoints.
 
 ## Extra Credit
 
-Fix the service's health check! Start a mysql instance and update the camel-context.xml file to use the correct connection and credentials.
+Fix the service's health check! Start a mysql instance and update the
+`camel-context.xml` file to use the correct connection and credentials.
 
-
-Even more extra credit, store all of the names into your mysql database. Print out data about the users in a new endpoint.
+Even more extra credit, store all of the names into your mysql database.
+Print out data about the users in a new endpoint.

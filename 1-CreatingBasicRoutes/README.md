@@ -6,7 +6,7 @@ In this exercise, you will be writing a Camel route that is capable of receiving
 - Ensure that you have Maven installed.
 
 - Clone the lab repository (or download it as a ZIP):
-```
+```sh
   $ git clone https://github.com/zgutterm/IBMThink2019.git
 ```
 - Using your favorite IDE, import or open the `IBMThink2019/1-CreatingBasicRoutes/processing-orders` project.
@@ -58,7 +58,7 @@ public class FileRouteBuilder extends RouteBuilder{
 
 ### Implement the configure method
 
-1. The superclass requires the implementation of the configure method. Add an empty method:
+1. The superclass requires the implementation of the `configure()` method. Add an empty method:
 
 ```java
 //TODO Implement the configure method
