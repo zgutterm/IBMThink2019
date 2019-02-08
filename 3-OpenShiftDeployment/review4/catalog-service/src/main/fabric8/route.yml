@@ -1,0 +1,8 @@
+spec:
+  port:
+    targetPort: 8082
+  to:
+    kind: Service
+    name: ${project.artifactId}
+  #TODO change the host name of the OpenShift route
+  host: CHANGE_ME

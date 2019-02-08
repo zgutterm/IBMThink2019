@@ -9,7 +9,7 @@ Clone the lab repository (or download it as a ZIP):
 ```
   $ git clone https://github.com/zgutterm/IBMThink2019.git
 ```
-Using your favorite IDE, import or open the `IBMThink2019/2-CamelREST/camel-microservices` project.
+Using your favorite IDE, import or open the `IBMThink2019/2-CamelREST/camel-microservices/hola-service` project and `IBMThink2019/2-CamelREST/camel-microservices/aloha-service` project.
 
 If using JBoss Developer Studio, click File -> Import -> Maven -> Existing Maven Projects and click Next. Navigate to `IBMThink2019/2-CamelREST/camel-microservices/hola-service` and click Ok. It may take a few moments for Maven to download the project dependencies.
 

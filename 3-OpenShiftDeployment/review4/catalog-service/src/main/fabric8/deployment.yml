@@ -1,0 +1,39 @@
+spec:
+  template:
+    spec:
+      containers:
+        - 
+          resources:
+            requests:
+              cpu: "0.2"
+              memory: 256Mi
+            limits:
+              cpu: "1.0"
+              memory: 256Mi
+          env:
+          - name: SPRING_APPLICATION_JSON
+            value: '{"server":{"undertow":{"io-threads":1, "worker-threads":2 }}}'
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              #TODO change the readiness probe path
+              path: CHANGE_ME
+              #TODO change the readiness probe port
+              port: CHANGE_ME
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              #TODO change the liveness probe path
+              path: CHANGE_ME
+              #TODO change the liveness probe port
+              port: CHANGE_ME
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
