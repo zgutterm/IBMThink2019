@@ -5,6 +5,7 @@
 .settings
 .project
 .DS_Store
+.classpath
 # Log file
 *.log
 

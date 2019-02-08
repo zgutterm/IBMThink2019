@@ -36,27 +36,34 @@ To login to your OpenShift instance from your machine, you will need to install 
 
 You can do so by going to 'About' section in web console.
 
-![openshift-online-about.png](./../images/00-lab-images/openshift-online-about.png)
+![openshift-online-about.png](./../images/00-lab-images/oc-cli.png)
 
 1. Go to your webconsole, link similar to https://console.starter-ca-central-1.openshift.com/console/command-line
-and select 'About' from the drop down when clicking the question mark.
-
-![openshift-online-command-line.png](./../images/00-lab-images/openshift-online-command-line.png)
-
-2. Select the 'Command Line Tools' link
+and select 'Command Line Tools' from the drop down when clicking the question mark.
 
 ![openshift-online-download-oc.png](./../images/00-lab-images/openshift-online-download-oc.png)
 
-3. Download the appropriate ‘oc’ tool for your operating system
+2. Download the appropriate ‘oc’ tool for your operating system
 
-4. Extract the executable file from the tar (on Linux and Mac), or from the zip (on Windows)
+3. Extract the executable file from the tar (on Linux and Mac), or from the zip (on Windows)
 
-### Optional
-To use the 'oc' tool without specifying the location of the file, you can add the file to your PATH environment variable or if in a Linux/Unix OS, you can move the file to a bin folder.
+#### Linux
+```bash
+tar -xvzf openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit.tar.gz
+cp openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit/oc /usr/local/bin/
+chmod +x /usr/local/bin/oc
+```
 
-In Fedora you could move it to /usr/local/bin/ or ~/bin for example.
+#### Mac
+```bash
+unzip openshift-origin-client-tools-v3.11.0-0cbc58b-mac.zip
+cp openshift-origin-client-tools-v3.11.0-0cbc58b-mac/oc /usr/local/bin/
+chmod +x /usr/local/bin/oc
+```
 
-#### Windows Adding to Path
+#### Windows
+Extract the zip file onto your local hard drive in the location of your choosing.
+##### Add to PATH
 1. Start the System Control Panel applet (Start - Settings - Control Panel - System). You may have to select View --> Small Icons
 2. Select the Advanced tab.
 3. Click the Environment Variables button.
