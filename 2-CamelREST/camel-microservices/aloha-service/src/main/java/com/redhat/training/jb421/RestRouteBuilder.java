@@ -8,7 +8,11 @@ public class RestRouteBuilder extends RouteBuilder {
 
 	@Override
 	public void configure() throws Exception {
+		//TODO implement the rest service
 
+		//TODO add a direct route for printing the greeting
+		
+	
 	}
 
 }

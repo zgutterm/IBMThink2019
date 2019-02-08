@@ -19,15 +19,15 @@ public class DatabaseHealthCheck implements HealthIndicator {
 	public Health health() {
 
 		try {
-			EntityManager entityManager = entityManagerFactory.createEntityManager();
-			Query q = entityManager.createNativeQuery("select 1");
-			q.getFirstResult();
-			//TODO return status of UP
-			return null;
-		}catch(Exception e) {
-			//TODO return status of DOWN
-			return null;
-		}
+		      EntityManager entityManager = entityManagerFactory.createEntityManager();
+		      Query q = entityManager.createNativeQuery("select 1");
+		      q.getFirstResult();
+		      //TODO return status of UP
+		      return Health.up().build();
+		    }catch(Exception e) {
+		      //TODO return status of DOWN
+		      return Health.down(e).build();
+		    }
 
 	}
 

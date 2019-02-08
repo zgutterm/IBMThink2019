@@ -59,7 +59,7 @@
 		</dependency>
 
 		<!--TODO Add camel-http4 component-->
-
+	
 		<dependency>
       <groupId>org.hibernate.javax.persistence</groupId>
       <artifactId>hibernate-jpa-2.1-api</artifactId>

@@ -1,6 +1,6 @@
 # Microservies with Camel Routes
 
-In this exercise, you will implement and execute two Camel-based microservices.
+In this exercise, you will implement and execute two Camel-based microservices. The first service, the aloha service, returns a simple greeting. The second service behaves similarly, but includes an endpoint that calls the aloha service.
 
 ## Prerequisites
 Ensure that you have Maven installed.
@@ -78,7 +78,6 @@ In the same `configure()` method below the `rest` route, add a route `from` "say
 		from("direct:sayHello").routeId("HelloREST")
 			.setBody().simple("{\n"
 			    + "  greeting: Aloha, ${header.name}\n"
-			    + "  server: " + System.getenv("HOSTNAME") + "\n"
 			    + "}\n");
 ```
 
@@ -96,7 +95,6 @@ Finally, add a `to` at the end of the REST route to connect the two routes:
 		from("direct:sayHello").routeId("HelloREST")
 			.setBody().simple("{\n"
 			    + "  greeting: Aloha, ${header.name}\n"
-			    + "  server: " + System.getenv("HOSTNAME") + "\n"
 			    + "}\n");
 	}
 ```
@@ -108,14 +106,13 @@ Now when you call the aloha-service using an HTTP GET request, the service retur
 ```
 {
   greeting: Aloha, Developer
-  server: workstation.lab.example.com
 }
 ```
 
 ## Update the pom.xml File
 To use the health check endpoints, we need to add the Spring Boot Actuator dependency. This enables the `/health` endpoint.
 
-Navigate to the pom.xml for each project and add the following dependency:
+Navigate to the pom.xml for EACH project and add the following dependency:
 
 ```
 <!--TODO Add Spring Boot Actuator Starter -->
@@ -192,6 +189,8 @@ from("direct:callAloha")
 
 Open the `DatabaseHealthCheck.java` file in the `hola-service` project. This class is responsible for ensuring that there is a connection to the database. This class implements the HealthIndicator interface, which the Spring Boot Actuator starter provides. The HealthIndicator interface requires a single method named health().
 
+Note: This service doesn't actually use the database (yet) so this health check is purely demonstrating the capability of the health check, but doesn't actually apply to the health of this service.
+
 Update the return statements to include a status of UP or DOWN depending on whether or not an exception occurred connecting to the database:
 
 ```
@@ -203,7 +202,7 @@ try {
       return Health.up().build();
     }catch(Exception e) {
       //TODO return status of DOWN
-      return Health.down(e).build();;
+      return Health.down(e).build();
     }
 ```
 
@@ -298,7 +297,7 @@ Navigate to the `camel-microservices/hola-service` directory and run `mvn packag
 [INFO] Building GE: Developing Microservices with Camel Routes - Hola Service 1.0
 [INFO] ------------------------------------------------------------------------
 ...
-[INFO] Building jar: /home/student/JB421/labs/camel-microservices/hola-service/target/aloha-service-1.0.jar
+[INFO] Building jar: /home/student/JB421/labs/camel-microservices/hola-service/target/hola-service-1.0.jar
 [INFO]
 [INFO] --- spring-boot-maven-plugin:1.5.12.RELEASE:repackage (default) @ aloha-service ---
 [INFO] ------------------------------------------------------------------------
@@ -311,7 +310,7 @@ Navigate to the `camel-microservices/hola-service` directory and run `mvn packag
 Run the Spring Boot application using the java -jar command. Leave the application running, and notice the log messages from XML route:
 
 ```
-[student@workstation aloha-service]$ java -jar target/aloha-service-1.0.jar
+[student@workstation aloha-service]$ java -jar target/hola-service-1.0.jar
 ...
 
   .   ____          _            __ _ _
@@ -331,16 +330,15 @@ Run the Spring Boot application using the java -jar command. Leave the applicati
 
 Open another terminal and verify that the Spring Boot application responds to HTTP requests.
 
-Invoke the curl command, using localhost as the host name with port 8081 and the /camel/aloha/Developer resource URI:
+Invoke the curl command, using localhost as the host name with port 8081 and the /camel/hola/Developer resource URI:
 
 ```
 [student@workstation hola-service]$ curl -si \
-    http://localhost:8082/camel/aloha/Developer
+    http://localhost:8082/camel/hola/Developer
 HTTP/1.1 200 OK
 ...
 {
   greeting: Hola, Developer
-  server: workstation.lab.example.com
 }
 ```
 
@@ -354,17 +352,28 @@ HTTP/1.1 200 OK
 ...
 {
   greeting: Aloha, Developer
-  server: workstation.lab.example.com
 }
 ```
 
-Verify that the health endpoint is running.
+This means that the endpoint from the Hola service is directing to the Aloha service instead.
+
+Test the health endpoint for the hola service.
 
 Invoke the curl command, using localhost as the host name with port 8182 and the /health resource URI:
 
 ```
 [student@workstation hola-service]$ curl -si http://localhost:8182/health
-HTTP/1.1 200 OK
+HTTP/1.1 503 Service Unavailable
 ...
-{"status":"UP"}
+
+{"status":"DOWN"}
 ```
+
+Uh oh, the service is down. This is because the health check includes our custom health check to ensure a database is enabled. Since we aren't actually using this database (yet), the service still technically functions when hitting the endpoints.
+
+## Extra Credit
+
+Fix the service's health check! Start a mysql instance and update the camel-context.xml file to use the correct connection and credentials.
+
+
+Even more extra credit, store all of the names into your mysql database. Print out data about the users in a new endpoint.

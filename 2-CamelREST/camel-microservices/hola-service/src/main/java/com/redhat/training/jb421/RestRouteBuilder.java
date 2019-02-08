@@ -9,11 +9,11 @@ import org.springframework.stereotype.Component;
 public class RestRouteBuilder extends RouteBuilder {
 
 	//TODO Inject value from configuration
-
+	@Value("${alohaHost}")
 	private String alohaHost;
 
 	//TODO Inject value from configuration
-
+	@Value("${alohaPort}")
 	private String alohaPort;
 
 	@Override
@@ -40,7 +40,6 @@ public class RestRouteBuilder extends RouteBuilder {
 		from("direct:sayHello").routeId("HelloREST")
 			.setBody().simple("{\n"
 			    + "  greeting: Hola, ${header.name}\n"
-			    + "  server: " + System.getenv("HOSTNAME") + "\n"
 			    + "}\n");
 	}
 

@@ -10,10 +10,10 @@ public class RestRouteBuilder extends RouteBuilder {
 
 	@Value("${alohaHost}")
 	private String alohaHost;
-	
+
 	@Value("${alohaPort}")
 	private String alohaPort;
-	
+
 	@Override
 	public void configure() throws Exception {
 
@@ -35,7 +35,6 @@ public class RestRouteBuilder extends RouteBuilder {
 		from("direct:sayHello").routeId("HelloREST")
 			.setBody().simple("{\n"
 			    + "  greeting: Hola, ${header.name}\n"
-			    + "  server: " + System.getenv("HOSTNAME") + "\n"
 			    + "}\n");
 	}
 
