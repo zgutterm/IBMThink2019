@@ -53,15 +53,17 @@ tar -xvzf openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit.tar.gz
 cp openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit/oc /usr/local/bin/
 chmod +x /usr/local/bin/oc
 ```
+
 #### Mac
 ```bash
-curl -L -O https://github.com/openshift/origin/releases/download/v3.11.0/openshift-origin-client-tools-v3.11.0-0cbc58b-mac.zip
 unzip openshift-origin-client-tools-v3.11.0-0cbc58b-mac.zip
 cp openshift-origin-client-tools-v3.11.0-0cbc58b-mac/oc /usr/local/bin/
 chmod +x /usr/local/bin/oc
 ```
 
-#### Windows Adding to Path
+#### Windows
+Extract the zip file onto your local hard drive in the location of your choosing.
+##### Add to PATH
 1. Start the System Control Panel applet (Start - Settings - Control Panel - System). You may have to select View --> Small Icons
 2. Select the Advanced tab.
 3. Click the Environment Variables button.
@@ -72,7 +74,3 @@ C:\Program Files\Windows Resource Kits\Tools\;%SystemRoot%\system32;%SystemRoot%
 ```
 6. You can add additional folders that you want to include in your path. Simply put "<folder with 'oc' tool>;" to the beginning of the PATH and click OK
 7. You'll need to restart the command prompt to use the updated system path.
-
-![openshift-online-login-oc.png](./../images/00-lab-images/openshift-online-login-oc.png)
-
-4. Login using the token provided
