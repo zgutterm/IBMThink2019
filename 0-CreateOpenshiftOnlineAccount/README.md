@@ -11,18 +11,23 @@ Then go here to create your OpenShift Online account: https://www.openshift.com/
 1. Select Free Trial
 
 ![sign up now](./../images/00-lab-images/sign-up-now.png)
+
 2. Choose the free plan for developers
 
 ![sign in](./../images/00-lab-images/sign-in.png)
+
 3. Sign in with your RH Developer Account
 
 ![phone verification](./../images/00-lab-images/phone-verify.png)
+
 4. Verify your phone number by entering the PIN that is sent to you phone.
 
 ![confirm subscription](./../images/00-lab-images/confirm-subscription.png)
+
 4. Confirm your subscription
 
 ![openshift-online-email.png](./../images/00-lab-images/openshift-online-email.png)
+
 5. Wait for email, then click on link to console in email
 
 ## Get OC Tools
