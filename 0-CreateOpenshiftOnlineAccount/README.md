@@ -47,7 +47,7 @@ and select 'Command Line Tools' from the drop down when clicking the question ma
 
 3. Extract the executable file from the tar (on Linux and Mac), or from the zip (on Windows)
 
-![openshift-online-download-oc.png](./../images/00-lab-images/openshift-online-download-oc.png)
+![openshift-online-login-oc.png](./../images/00-lab-images/openshift-online-login-oc.png)
 
 4. Login using the token provided
 
