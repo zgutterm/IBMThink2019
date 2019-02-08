@@ -1,5 +1,7 @@
 # Compiled class file
 *.class
+*.classpath
+.classpath
 .settings
 .project
 .DS_Store

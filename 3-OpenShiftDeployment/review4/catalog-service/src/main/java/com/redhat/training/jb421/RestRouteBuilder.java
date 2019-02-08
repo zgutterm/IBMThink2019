@@ -34,16 +34,14 @@ public class RestRouteBuilder extends RouteBuilder {
 							+ "?dataSource=mysqlDataSource&outputType=SelectOne"
 							+ "&outputClass=com.redhat.training.jb421.model.CatalogItem")
 
-				//TODO: invoke the SqlProcessor
-
+				.process(new SqlProcessor())
 				.to("direct:getVendor")
 				.choice()
 					.when(body().isEqualTo(VENDOR_ERROR_MSG))
 						.setHeader(Exchange.HTTP_RESPONSE_CODE, constant(500))
 						.transform(constant("ERROR Locating Vendor"))
 					.otherwise()
-						//TODO: invoke the ResponseProcessor
-
+						.process(new ResponseProcessor())
 						.marshal().json(JsonLibrary.Jackson)
 
 				.end();
