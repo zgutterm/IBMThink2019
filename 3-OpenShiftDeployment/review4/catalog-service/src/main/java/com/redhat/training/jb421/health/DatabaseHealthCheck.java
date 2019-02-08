@@ -17,16 +17,14 @@ public class DatabaseHealthCheck {
 
 	public Health health() {
 		
-		
-		try {
-			EntityManager entityManager = entityManagerFactory.createEntityManager();
-			Query q = entityManager.createNativeQuery("select 1");
-			q.getFirstResult();
-			return null;
-		}catch(Exception e) {
-			return null;
-		}
-		
+		  try {
+		    EntityManager entityManager = entityManagerFactory.createEntityManager();
+		    Query q = entityManager.createNativeQuery("select 1");
+		    q.getFirstResult();
+		    return Health.up().build();
+		  }catch(Exception e) {
+		    return Health.down(e).build();
+		  }
 		
 	}
 
