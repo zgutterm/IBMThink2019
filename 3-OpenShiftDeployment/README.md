@@ -18,19 +18,19 @@ Clone the lab repository (or download it as a ZIP):
 ```
   $ git clone https://github.com/zgutterm/IBMThink2019.git
 ```
-Using your favorite IDE, import or open the two projects in the `IBMThink2019/3-OpenShiftDeployment/review-4` project.
+Using your favorite IDE, import or open the two projects `catalog-service` and `vendor-service` in the `IBMThink2019/3-OpenShiftDeployment/review-4` project.
 
 If using JBoss Developer Studio, click File -> Import -> Maven -> Existing Maven Projects and click Next. Navigate to `IBMThink2019/3-OpenShiftDeployment/review-4/vendor-service` and click Ok. It may take a few moments for Maven to download the project dependencies.
 
-Similarly, import the `IBMThink2019/3-OpenShiftDeployment/review-4/catalog-service` project. This project will have errors after you import. These errors are resolved in later steps.
+The `catalog-service` project will have errors after you import. These errors are resolved in later steps.
 
 ## Create the OpenShift Project
 
 1. Log in to the OpenShift cluster with the `oc` tool
 
-Open a terminal window and run the oc login command. Replace username/password/openshiftonlineurl with your credentials. If the oc login command prompts you about using insecure connections, answer y:
+Open a terminal window and run the oc login command. Replace `username`/`password`/`openshiftonlineurl` with your personal values found in the OpenShift UI. If the oc login command prompts you about using insecure connections, answer `y`:
 
-```
+```sh
 [student@workstation ~]$ oc login -u {username} -p {password} \
     https://{openshiftonlineurl}
 ...
@@ -42,7 +42,7 @@ Login successful.
 
 2. Create a new project called `review4-lab` in OpenShift:
 
-```
+```sh
 [student@workstation ~]$ oc new-project review4-lab
 ```
 
@@ -50,9 +50,9 @@ Login successful.
 
 1. TODO -- Make image stream for fuse on openshift available -- Also check for next step to make the name correct
 
-2. Open the `pom.xml` file for the `catalog-service`. Include the image stream name:
+2. Open the `pom.xml` file for the `catalog-service`. Include the `openshift/java` image stream name:
 
-```
+```xml
 ...
 <plugins>
   <plugin>
@@ -65,7 +65,7 @@ Login successful.
           <spring-boot>
             <!-- TODO: configure the image stream name -->
             <fromMode>istag</fromMode>
-            <from>openshift/fuse7-java-openshift:1.1</from>
+            <from>openshift/java</from>
           </spring-boot>
         </config>
       </generator>
@@ -73,10 +73,12 @@ Login successful.
     <executions>
 ...
 ```
+In OpenShift an `ImageStream` represents a pointer to a specific version of a container image.  In this example, the `openshift/java` image stream contains a basic JVM environment oriented towards JAR-based deployments such as Spring Boot.
+
 
 3. In the `catalog-service` open the `src/main/fabric8/deployment.yml` file. Update the readiness probe and the liveness probe to both use path `/health` and port `8182`:
 
-```
+```yaml
 readinessProbe:
            failureThreshold: 3
            httpGet:
@@ -105,25 +107,24 @@ readinessProbe:
 
 
 
-4. In the same package, open the `route.yml` file and change the hostname to `catalog.apps.lab.example.com`:
+4. In the same package, open the `route.yml` file:
 
-```
+```yaml
 spec:
   port:
     targetPort: 8082
   to:
     kind: Service
     name: ${project.artifactId}
-  #TODO change the host name of the OpenShift route
-  host: catalog.apps.lab.example.com
 ```
+This `Route` tells OpenShift to expose the OpenShift service object for the `catalog-service` application using port 8082.
 
 
 ## Finish the Catalog-Service Routes
 ### Add a connection to the vendor service
 1. Update the `RestRouteBuilder` class to invoke the `vendor-service` microservice using the Camel HTTP4 component and the provided `vendorHost` and `vendorPort` properties. Recover the vendor id from the `catalog_vendor_id` header defined on the SqlProcessor processor:
 
-```
+```java
 from("direct:getVendor")
   .removeHeader(Exchange.HTTP_URI)
    //TODO: Add the catalog_vendor_id header
@@ -135,7 +136,7 @@ from("direct:getVendor")
 
 2. Update the `RestRouteBuilder` class to invoke the `VendorProcessor` processor right after the HTTP4 component. This processor adds the vendor name to a Camel header:
 
-```
+```java
 //TODO: Invoke the vendor-service microservice
 .to("http4:"+ vendorHost +":"+ vendorPort +"/camel/vendor")
 //TODO: Invoke the VendorProcessor
@@ -159,7 +160,7 @@ Update the RestRouteBuilder class to add the circuit breaker pattern to the call
 * If there is a failure, or the circuit is open, the message `Vendor Not Available!` must be used as a fallback.
 
 
-```
+```java
 //TODO: Add circuit breaker pattern
 .hystrix()
   .hystrixConfiguration()
@@ -185,7 +186,7 @@ Use the Fabric8 Maven Plug-in to build a container image for the Spring Boot app
 
 Navigate to the `review4/catalog-service` folder and invoke the fabric8:deploy Maven goal, from the `openshift` Maven profile:
 
-```
+```sh
 [student@workstation catalog-service]$ mvn -Popenshift fabric8:deploy
 ```
 
@@ -196,7 +197,7 @@ Navigate to the `review4/catalog-service` folder and invoke the fabric8:deploy M
 
 Run the oc get pod command until the output resembles the following:
 
-```
+```sh
 [student@workstation catalog-service]$ oc get pod
 NAME                                   READY     STATUS      RESTARTS   AGE
 catalog-service-1-mwvl8       1/1       Running     0          33s
@@ -206,14 +207,16 @@ vendor-service-s2i-1-build    0/1       Completed   0          13m
 ```
 
 2. Send an HTTP GET to http://vendor.apps.lab.example.com/camel/vendor/1. This returns a 200 HTTP response code. Look at the Response body tab:
-```
+
+```sh
 [student@workstation aloha-service]$ curl -si http://catalog.apps.lab.example.com/camel/vendor/1
 {"id":1,"name":"Bookmart, Inc."}
 
 ```
 
 3. Send an HTTP GET to http://catalog.apps.lab.example.com/camel/catalog/1. This returns a 200 HTTP response code. Look at the Response body:
-```
+
+```sh
 [student@workstation aloha-service]$ curl -si http://catalog.apps.lab.example.com/camel/catalog/1
 HTTP/1.1 200 OK
 ...
@@ -222,14 +225,14 @@ HTTP/1.1 200 OK
 
 4. Run the block-vendor.sh bash script to block connections to the vendor-service microservice:
 
-```
+```sh
 [student@workstation catalog-service]$ cd ..
 [student@workstation review4]$ ./block-vendor.sh
-
 ```
 
 Send an HTTP GET to http://catalog.apps.lab.example.com/camel/catalog/1. This returns a 500 HTTP response code. Look at the Response body:
-```
+
+```sh
 [student@workstation aloha-service]$ curl -si http://catalog.apps.lab.example.com/camel/catalog/1
 ...
 ERROR Locating Vendor

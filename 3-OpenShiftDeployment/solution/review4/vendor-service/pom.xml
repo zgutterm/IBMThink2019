@@ -131,7 +131,7 @@
 								<config>
 									<spring-boot>
 										<fromMode>istag</fromMode>
-										<from>openshift/fuse7-java-openshift:1.1</from>
+										<from>openshift/java</from>
 									</spring-boot>
 								</config>
 							</generator>
