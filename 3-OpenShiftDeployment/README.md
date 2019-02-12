@@ -88,7 +88,7 @@ _Note: Be sure to swap in your pod's name in the previous command_
 
 5. Execute the script inside the pod.
 ```sh
-sh-4.2$ mysql -ubookstore -predhat bookstore /tmp/create-db.sql
+sh-4.2$ mysql -ubookstore -predhat bookstore < /tmp/create-db.sql
 ```
 
 ## Prepare the Fabric8 Plugin
