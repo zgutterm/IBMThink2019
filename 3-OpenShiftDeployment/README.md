@@ -58,9 +58,13 @@ Login successful.
     -i openshift/mysql
 ```
 
+<<<<<<< HEAD
 2. Wait until your pod is *fully* running using the `oc get pods` command (you should only see one pod running with a similar name to the below output):
+=======
+2. Make sure your pod is running using the `oc get pods -w` command:
+>>>>>>> 00725539368808eaaa4b860f6f8cbc5975e89eea
 ```sh
-[student@workstation 3-OpenShiftDeployment]$ oc get pods
+[student@workstation 3-OpenShiftDeployment]$ oc get pods -w
 NAME            READY     STATUS    RESTARTS   AGE
 mysql-1-x7vg8   1/1       Running   0          2m
 ```
