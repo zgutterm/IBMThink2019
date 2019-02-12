@@ -16,7 +16,7 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<jboss.fuse.bom.version>7.1.0.fuse-710019-redhat-00002</jboss.fuse.bom.version>
 		<spring-boot.version>1.5.12.RELEASE</spring-boot.version>
-		<fabric8.maven.plugin.version>3.5.33.fuse-710023-redhat-00002</fabric8.maven.plugin.version>
+		<fabric8.maven.plugin.version>3.5.42</fabric8.maven.plugin.version>
 	</properties>
 
 	<dependencyManagement>

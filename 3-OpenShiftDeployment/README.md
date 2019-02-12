@@ -46,6 +46,46 @@ Login successful.
 [student@workstation ~]$ oc new-project review4-lab
 ```
 
+## Deploy a MySQL Pod
+
+1. Create the MySQL pod using the following `oc` command:
+
+```sh
+[student@workstation ~]$ oc new-app \
+    -e MYSQL_USER=bookstore \
+    -e MYSQL_PASSWORD=redhat \
+    -e MYSQL_DATABASE=bookstore \
+    -i openshift/mysql
+```
+
+2. Make sure your pod is running using the `oc get pods` command:
+```sh
+[student@workstation ~]$ oc get pods
+NAME            READY     STATUS    RESTARTS   AGE
+mysql-1-x7vg8   1/1       Running   0          2m
+```
+_Note: Your pod will have a different name than the one shown in the previous example._
+
+
+
+3. Copy the name of the pod onto the clipboard and use the `oc rsync` command to push the database initialization script into the pod.
+```sh
+[student@workstation ~]$ oc rsync . mysql-1-x7vg8:/tmp/ --exclude=* --include=create-db.sql --no-perms
+```
+_Note: Be sure to swap in your pod's name in the previous command_
+
+4. Use the `oc rsh` command to run the SQL script inside the pod.
+```sh
+[student@workstation ~]$ oc rsh mysql-1-x7vg8
+sh-4.2$
+```
+_Note: Be sure to swap in your pod's name in the previous command_
+
+5. Execute the script inside the pod.
+```sh
+sh-4.2$ mysql -ubookstore -predhat bookstore /tmp/create-db.sql
+```
+
 ## Prepare the Fabric8 Plugin
 
 1. TODO -- Make image stream for fuse on openshift available -- Also check for next step to make the name correct
