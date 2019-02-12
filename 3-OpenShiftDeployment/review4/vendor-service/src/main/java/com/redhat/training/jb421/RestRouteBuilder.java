@@ -20,8 +20,11 @@ public class RestRouteBuilder extends RouteBuilder {
 			.to("sql:select * from bookstore.Vendor where id= :#vendorId"
 					+ "?dataSource=mysqlDataSource&outputType=SelectOne"
 					+ "&outputClass=com.redhat.training.jb421.model.Vendor")
-					.marshal().json(JsonLibrary.Jackson);
-			
+			.choice()
+				.when(header("CamelSqlRowCount").isGreaterThan(0))
+					.marshal().json(JsonLibrary.Jackson).endChoice()
+				.otherwise()
+					.setBody(simple("Vendor not found!"));
 	}
 
 }

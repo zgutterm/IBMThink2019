@@ -2,7 +2,7 @@ spec:
   template:
     spec:
       containers:
-        - 
+        -
           resources:
             requests:
               cpu: "0.2"
@@ -16,8 +16,10 @@ spec:
           readinessProbe:
             failureThreshold: 3
             httpGet:
-              path: /health
-              port: 8180
+              #TODO change the readiness probe path to '/health'
+              path: FIXME
+              #TODO change the readiness probe port to '8181'
+              port: FIXME
               scheme: HTTP
             initialDelaySeconds: 30
             periodSeconds: 10
@@ -26,8 +28,10 @@ spec:
           livenessProbe:
             failureThreshold: 3
             httpGet:
-              path: /health
-              port: 8181
+              #TODO change the liveness probe path to '/health'
+              path: FIXME
+              #TODO change the liveness probe port to '8181'
+              port: FIXME
               scheme: HTTP
             initialDelaySeconds: 30
             periodSeconds: 10

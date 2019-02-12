@@ -33,31 +33,49 @@ public class RestRouteBuilder extends RouteBuilder {
 				.to("sql:select id, author, description, vendor_id as vendorId from bookstore.CatalogItem where id=:#catalogId"
 							+ "?dataSource=mysqlDataSource&outputType=SelectOne"
 							+ "&outputClass=com.redhat.training.jb421.model.CatalogItem")
-
-				.process(new SqlProcessor())
-				.to("direct:getVendor")
 				.choice()
-					.when(body().isEqualTo(VENDOR_ERROR_MSG))
-						.setHeader(Exchange.HTTP_RESPONSE_CODE, constant(500))
-						.transform(constant("ERROR Locating Vendor"))
+					.when(header("CamelSqlRowCount").isGreaterThan(0))
+						//TODO: invoke the SqlProcessor
+						.process(new SqlProcessor())
+						.to("direct:getVendor")
+						.to("direct:processVendorResult")
 					.otherwise()
-						.process(new ResponseProcessor())
-						.marshal().json(JsonLibrary.Jackson)
-
-				.end();
-
+						.setBody(simple("Error locating CatalogItem"));
 
 
 		from("direct:getVendor")
 			.removeHeader(Exchange.HTTP_URI)
 			//TODO: Add the catalog_vendor_id header
-			.setHeader(Exchange.HTTP_PATH,simple("CHANGE_ME"))
+			.setHeader(Exchange.HTTP_PATH,simple("${header.catalog_vendor_id}"))
 			.setHeader(Exchange.HTTP_METHOD, simple("GET"))
 			//TODO: Add circuit breaker pattern
-
+			.hystrix()
+				.hystrixConfiguration()
+			 		.executionTimeoutInMilliseconds(3000)
+			 		.circuitBreakerRequestVolumeThreshold(2)
+			 		.metricsRollingPercentileWindowInMilliseconds(60000)
+			 		.circuitBreakerSleepWindowInMilliseconds(20000)
+			 		.circuitBreakerErrorThresholdPercentage(50)
+			 	.end()
 				//TODO: Invoke the vendor-service microservice
-
+			 	.to("http4:"+ vendorHost +":"+ vendorPort +"/camel/vendor")
 				//TODO: Invoke the VendorProcessor
+				.process(new VendorProcessor())
+			.onFallback()
+				.transform(constant(VENDOR_ERROR_MSG))
+			.endHystrix();
+		
+		from("direct:processVendorResult")
+			.log("#{body}")
+			.choice()
+				.when(body().isEqualTo(VENDOR_ERROR_MSG))
+					.setHeader(Exchange.HTTP_RESPONSE_CODE, constant(500))
+					.transform(constant("ERROR Locating Vendor"))
+				.otherwise()
+					//TODO: invoke the ResponseProcessor
+					.process(new ResponseProcessor())
+					.marshal().json(JsonLibrary.Jackson)
+			.end();
 
 
 	}

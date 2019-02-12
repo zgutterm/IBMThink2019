@@ -10,21 +10,23 @@ import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DatabaseHealthCheck {
+public class DatabaseHealthCheck implements HealthIndicator {
 	
 	@Autowired
 	private EntityManagerFactory entityManagerFactory;
 
 	public Health health() {
 		
-		  try {
-		    EntityManager entityManager = entityManagerFactory.createEntityManager();
-		    Query q = entityManager.createNativeQuery("select 1");
-		    q.getFirstResult();
-		    return Health.up().build();
-		  }catch(Exception e) {
-		    return Health.down(e).build();
-		  }
+		
+		try {
+			EntityManager entityManager = entityManagerFactory.createEntityManager();
+			Query q = entityManager.createNativeQuery("select 1");
+			q.getFirstResult();
+			return Health.up().build();
+		}catch(Exception e) {
+			return Health.down(e).build();
+		}
+		
 		
 	}
 

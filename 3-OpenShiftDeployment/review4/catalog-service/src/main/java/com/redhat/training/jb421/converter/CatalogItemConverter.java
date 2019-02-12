@@ -11,7 +11,7 @@ import java.io.InputStream;
 public class CatalogItemConverter {
 
     @Converter
-    public static String CatalogItemToString(CatalogItem catalogItem, Exchange exchange) {
+    public static String catalogItemToString(CatalogItem catalogItem, Exchange exchange) {
         return catalogItem.toString();
     }
     @Converter

@@ -1,34 +1,56 @@
 # Deploying Microservices with Red Hat Fuse on OpenShift
 
-The vendor-service REST service provides a single endpoint that retrieves vendor data from the bookstore database by ID. The data resides inside a MySQL database server.
+## Introduction
+In this lab, you will deploy two simple example microservices, a
+`catalog-service` and a `vendor service`.
 
-The vendor-service REST endpoint takes a single argument, the vendor ID, and returns JSON data. The resource URI is `/camel/vendor/{id}`.
+The `vendor-service` REST service provides a single endpoint that retrieves
+vendor data from the bookstore database by ID. The data resides inside a MySQL
+database server.
+
+The `vendor-service` REST endpoint takes a single argument, the vendor ID, and
+returns JSON data. The resource URI is `/camel/vendor/{id}`.
 
 
-The catalog-service REST service provides a single endpoint that retrieves catalog item data in the bookstore database. The catalog-service REST endpoint takes a single argument, the catalog item ID. The resource URI is `/camel/catalog/{id}`.
+The `catalog-service` REST service provides a single endpoint that retrieves
+catalog item data in the bookstore database. The `catalog-service` REST endpoint
+takes a single argument, the catalog item ID. The resource URI is
+`/camel/catalog/{id}`.
 
-The catalog-service REST service retrieves the vendor name from the vendor-service REST service.
+The `catalog-service` REST service also makes a REST call to the `vendor-service`
+REST service to retrieve the vendor name based on the ID that is found in the
+database.
 
 ## Prerequisites
 Ensure that you have Maven installed.
 
-Ensure that you have an OpenShift Online account and that your environment is available.
+Ensure that you have an OpenShift Online account and that your environment is
+available.
 
 Clone the lab repository (or download it as a ZIP):
 ```
   $ git clone https://github.com/zgutterm/IBMThink2019.git
 ```
-Using your favorite IDE, import or open the two projects `catalog-service` and `vendor-service` in the `IBMThink2019/3-OpenShiftDeployment/review-4` project.
+Using your favorite IDE, import or open the two projects `catalog-service` and
+`vendor-service` in the `IBMThink2019/3-OpenShiftDeployment/review-4` project.
 
-If using JBoss Developer Studio, click File -> Import -> Maven -> Existing Maven Projects and click Next. Navigate to `IBMThink2019/3-OpenShiftDeployment/review-4/vendor-service` and click Ok. It may take a few moments for Maven to download the project dependencies.
+If using JBoss Developer Studio, click File -> Import -> Maven -> Existing Maven
+Projects and click Next. Navigate to
+`IBMThink2019/3-OpenShiftDeployment/review-4/vendor-service` and click *Ok*.
 
-The `catalog-service` project will have errors after you import. These errors are resolved in later steps.
+_Note: It may take a few moments for Maven to download the project dependencies._
+
+The `catalog-service` project *will have errors after you import*. These errors
+are resolved in later steps.
 
 ## Create the OpenShift Project
 
 1. Log in to the OpenShift cluster with the `oc` tool
 
-Open a terminal window and run the oc login command. Replace `username`/`password`/`openshiftonlineurl` with your personal values found in the OpenShift UI. If the oc login command prompts you about using insecure connections, answer `y`:
+Open a terminal window and run the oc login command. Replace the
+`username`/`password`/`openshiftonlineurl` placeholders with the value for your
+personal cluster found in the OpenShift Online UI. If the `oc login` command
+prompts you about using insecure connections, answer `y`:
 
 ```sh
 [student@workstation 3-OpenShiftDeployment]$ oc login -u {username} -p {password} \
@@ -40,15 +62,23 @@ Login successful.
 ...
 ```
 
-2. Create a new project called `review4-lab` in OpenShift:
+2. Create a new project called `review4-lab` in OpenShift using
+the `oc new-project` command:
 
 ```sh
 [student@workstation 3-OpenShiftDeployment]$ oc new-project review4-lab
 ```
 
+In OpenShift projects are a tool that allows a community of users to organize
+and manage their content in isolation from other communities.  Technically
+speaking a project is a Kubernetes namespace with additional annotations, and is
+the central vehicle by which access to resources for regular users is managed.
+Users must be given access to projects by administrators, or if allowed to
+create projects, automatically have access to their own projects.
+
 ## Deploy a MySQL Pod
 
-1. Create the MySQL pod using the following `oc` command:
+1. Create the MySQL pod using the following `oc new-app` command:
 
 ```sh
 [student@workstation 3-OpenShiftDeployment]$ oc new-app \
@@ -57,6 +87,12 @@ Login successful.
     -e MYSQL_DATABASE=bookstore \
     -i openshift/mysql
 ```
+
+Here you create a new MySQL pod, using the `openshift/mysql` ImageStream,
+which provides a base MySQL container image which is then customized when the
+container starts up using the `MYSQL_USER`, `MYSQL_PASSWORD`, and
+`MYSQL_DATABASE` environment variables supported by the container image
+referenced by the `openshift/mysql` ImageStream.
 
 2. Make sure your pod is running using the `oc get pods -w` command:
 ```sh
@@ -68,7 +104,8 @@ _Note: Your pod will have a different name than the one shown in the previous ex
 
 
 
-3. Copy the name of the pod onto the clipboard and use the `oc rsync` command to push the database initialization script into the pod.
+3. Copy the name of the pod onto the clipboard and use the `oc rsync` command to
+push the database initialization script into the pod.
 ```sh
 [student@workstation 3-OpenShiftDeployment]$ oc rsync . mysql-1-x7vg8:/tmp/ \
 --exclude=* --include=create-db.sql --no-perms
@@ -92,9 +129,11 @@ _Note: Be sure to swap in your pod's name in the previous command_
 sh-4.2$ mysql -ubookstore -predhat bookstore < /tmp/create-db.sql
 ```
 
-## Prepare the Fabric8 Plugin
+## Prepare the Maven Fabric8 Plugin - Vendor Service
 
-1. Open the `pom.xml` file for the `catalog-service`. Include the `openshift/java` image stream name:
+1. Open the `pom.xml` file for the `vendor-service`. Include the
+`openshift/java` ImageStream name in the `<from>` element in the plugin
+definition:
 
 ```xml
 ...
@@ -117,36 +156,40 @@ sh-4.2$ mysql -ubookstore -predhat bookstore < /tmp/create-db.sql
     <executions>
 ...
 ```
-In OpenShift an `ImageStream` represents a pointer to a specific version of a container image.  In this example, the `openshift/java` image stream contains a basic JVM environment oriented towards JAR-based deployments such as Spring Boot.
+In OpenShift an `ImageStream` represents a pointer to a specific version of a
+container image.  In this example, the `openshift/java` image stream contains a
+basic JVM environment oriented towards JAR-based deployments such as Spring Boot.
 
 
-3. In the `catalog-service` open the `src/main/fabric8/deployment.yml` file. Update the readiness probe and the liveness probe to both use path `/health` and port `8182`:
+2. In the `vendor-service` open the `src/main/fabric8/deployment.yml` file.
+Update the readiness probe and the liveness probe to both use path `/health`
+and port `8181`:
 
 ```yaml
 readinessProbe:
-           failureThreshold: 3
-           httpGet:
-             #TODO change the readiness probe path
-             path: /health
-             #TODO change the readiness probe port
-             port: 8182
-             scheme: HTTP
-           initialDelaySeconds: 30
-           periodSeconds: 10
-           successThreshold: 1
-           timeoutSeconds: 5
-         livenessProbe:
-           failureThreshold: 3
-           httpGet:
-             #TODO change the liveness probe path
-             path: /health
-             #TODO change the liveness probe port
-             port: 8182
-             scheme: HTTP
-           initialDelaySeconds: 30
-           periodSeconds: 10
-           successThreshold: 1
-           timeoutSeconds: 5
+  failureThreshold: 3
+  httpGet:
+    #TODO change the readiness probe path to '/health'
+    path: /health
+    #TODO change the readiness probe port to '8181'
+    port: 8181
+    scheme: HTTP
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 5
+livenessProbe:
+  failureThreshold: 3
+  httpGet:
+    #TODO change the liveness probe path to '/health'
+    path: /health
+    #TODO change the liveness probe port to '8181'
+    port: 8181
+    scheme: HTTP
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 5
 ```
 The livesness and readiness probes are used by Kubernetes to determine if a pod
 is healthy and ready to serve requests.  Pods that do not return an HTTP status
@@ -155,6 +198,95 @@ requests.  Kubernetes will also attempt to kill and restart unhealthy containers
 in the event that the problem is temporary.
 
 
+
+4. In the same package, open the `route.yml` file:
+
+```yaml
+spec:
+  port:
+    targetPort: 8081
+  to:
+    kind: Service
+    name: ${project.artifactId}
+```
+This `Route` tells OpenShift to expose the OpenShift service object for the
+`vendor-service` application using port 8081.
+
+
+## Deploy the Vendor Service
+
+Use the Fabric8 Maven Plug-in to build a container image for the Spring Boot
+application and create the required resources on OpenShift.
+
+1. Navigate to the `review4/vendor-service` folder and invoke the
+`fabric8:deploy` Maven goal, enabling the `openshift` Maven profile:
+
+```sh
+[student@workstation vendor-service]$ mvn -Popenshift fabric8:deploy
+```
+
+2. Capture the hostname assigned to OpenShift Route that fronts the
+`vendor-service`.  Use the `oc status` command to find
+
+## Prepare the Maven Fabric8 Plugin - Catalog Service
+
+1. Open the `pom.xml` file for the `catalog-service`. Include the
+`openshift/java` ImageStream name in the `<from>` element in the plugin
+definition:
+
+```xml
+...
+<plugins>
+  <plugin>
+    <groupId>io.fabric8</groupId>
+    <artifactId>fabric8-maven-plugin</artifactId>
+    <version>${fabric8.maven.plugin.version}</version>
+    <configuration>
+      <generator>
+        <config>
+          <spring-boot>
+            <!-- TODO: configure the image stream name -->
+            <fromMode>istag</fromMode>
+            <from>openshift/java</from>
+          </spring-boot>
+        </config>
+      </generator>
+    </configuration>
+    <executions>
+...
+```
+
+
+2. In the `catalog-service` open the `src/main/fabric8/deployment.yml` file.
+Update the readiness probe and the liveness probe to both use path `/health`
+and port `8182`:
+
+```yaml
+readinessProbe:
+  failureThreshold: 3
+  httpGet:
+    #TODO change the readiness probe path to `/health`
+    path: /health
+    #TODO change the readiness probe port to '8182'
+    port: 8182
+    scheme: HTTP
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 5
+livenessProbe:
+  failureThreshold: 3
+  httpGet:
+    #TODO change the liveness probe path to '/health'
+    path: /health
+    #TODO change the liveness probe port to '8182'
+    port: 8182
+    scheme: HTTP
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 5
+```
 
 4. In the same package, open the `route.yml` file:
 
@@ -172,7 +304,10 @@ This `Route` tells OpenShift to expose the OpenShift service object for the
 
 ## Finish the Catalog-Service Routes
 ### Add a connection to the vendor service
-1. Update the `RestRouteBuilder` class to invoke the `vendor-service` microservice using the Camel HTTP4 component and the provided `vendorHost` and `vendorPort` properties. Recover the vendor id from the `catalog_vendor_id` header defined on the SqlProcessor processor:
+1. Update the `RestRouteBuilder` class to invoke the `vendor-service`
+microservice using the Camel HTTP4 component and the provided `vendorHost` and
+`vendorPort` properties. Recover the vendor id from the `catalog_vendor_id`
+header set by the `SqlProcessor` processor implementation:
 
 ```java
 from("direct:getVendor")
@@ -232,9 +367,11 @@ Update the RestRouteBuilder class to add the circuit breaker pattern to the call
 
 ## Deploy the Catalog Service
 
-Use the Fabric8 Maven Plug-in to build a container image for the Spring Boot application and create the required resources on OpenShift.
+Use the Fabric8 Maven Plug-in to build a container image for the Spring Boot
+application and create the required resources on OpenShift.
 
-Navigate to the `review4/catalog-service` folder and invoke the fabric8:deploy Maven goal, from the `openshift` Maven profile:
+1. Navigate to the `review4/catalog-service` folder and invoke the
+`fabric8:deploy` Maven goal, enabling the `openshift` Maven profile:
 
 ```sh
 [student@workstation catalog-service]$ mvn -Popenshift fabric8:deploy
