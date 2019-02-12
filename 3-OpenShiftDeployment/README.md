@@ -58,24 +58,17 @@ Login successful.
     -i openshift/mysql
 ```
 
-<<<<<<< HEAD
 2. Wait until your pod is *fully* running using the `oc get pods` command (you should only see one pod running with a similar name to the below output):
-=======
-2. Make sure your pod is running using the `oc get pods -w` command:
->>>>>>> 00725539368808eaaa4b860f6f8cbc5975e89eea
 ```sh
-[student@workstation 3-OpenShiftDeployment]$ oc get pods -w
+[student@workstation 3-OpenShiftDeployment]$ oc get pods
 NAME            READY     STATUS    RESTARTS   AGE
 mysql-1-x7vg8   1/1       Running   0          2m
 ```
-_Note: Your pod will have a different name than the one shown._
-
 _Note: If your pod is still not started after a few minutes, it may need to be restarted. Try running `oc deploy mysql --cancel` and then `oc deploy mysql --latest`_
 
 
-
 3. Copy the name of the pod onto the clipboard and use the `oc rsync` command to push the database initialization script into the pod.
-```sh
+```
 [student@workstation 3-OpenShiftDeployment]$ oc rsync . mysql-1-x7vg8:/tmp/ --exclude=* --include=create-db.sql --no-perms
 sending incremental file list
 create-db.sql
