@@ -58,13 +58,15 @@ Login successful.
     -i openshift/mysql
 ```
 
-2. Make sure your pod is running using the `oc get pods` command:
+2. Wait until your pod is *fully* running using the `oc get pods` command (you should only see one pod running with a similar name to the below output):
 ```sh
 [student@workstation 3-OpenShiftDeployment]$ oc get pods
 NAME            READY     STATUS    RESTARTS   AGE
 mysql-1-x7vg8   1/1       Running   0          2m
 ```
-_Note: Your pod will have a different name than the one shown in the previous example._
+_Note: Your pod will have a different name than the one shown._
+
+_Note: If your pod is still not started after a few minutes, it may need to be restarted. Try running `oc deploy mysql --cancel` and then `oc deploy mysql --latest`_
 
 
 
