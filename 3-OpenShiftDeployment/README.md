@@ -319,7 +319,9 @@ from("direct:getVendor")
   .to("http4:"+ vendorHost +":"+ vendorPort +"/camel/vendor")
 ```
 
-2. Update the `RestRouteBuilder` class to invoke the `VendorProcessor` processor right after the HTTP4 component. This processor adds the vendor name to a Camel header:
+2. Update the `RestRouteBuilder` class to invoke the `VendorProcessor` processor
+right after the HTTP4 component. This processor adds the vendor name to a Camel
+header:
 
 ```java
 //TODO: Invoke the vendor-service microservice
@@ -330,20 +332,21 @@ from("direct:getVendor")
 
 ### Configure Hystrix Circuit Breaker in the Routes
 
-Update the RestRouteBuilder class to add the circuit breaker pattern to the call from the catalog-service to the vendor-service. Include the following configuration for the circuit breaker:
+Update the `RestRouteBuilder` class to add the circuit breaker pattern to the
+call from the `catalog-service` to the `vendor-service`. Include the following
+configuration specifications for the circuit breaker:
 
 * Any execution over three seconds must time out.
-
-* The circuit breaker must receive a minimum of two requests before the circuit can open.
-
-* The circuit breaker must only monitor a rolling window of the last 60 seconds of requests when deciding whether to open.
-
-* When opened, the circuit breaker must wait 20 seconds before attempting to close again.
-
-* The circuit breaker must open if greater than 50 percent of the requests are failing.
-
-* If there is a failure, or the circuit is open, the message `Vendor Not Available!` must be used as a fallback.
-
+* The circuit breaker must receive a minimum of two requests before the circuit
+can open.
+* The circuit breaker must only monitor a rolling window of the last 60 seconds
+of requests when deciding whether to open.
+* When opened, the circuit breaker must wait 20 seconds before attempting to
+close again.
+* The circuit breaker must open if greater than 50 percent of the requests are
+failing.
+* If there is a failure, or the circuit is open, the message
+`Vendor Not Available!` must be used as a fallback.
 
 ```java
 //TODO: Add circuit breaker pattern
@@ -393,7 +396,9 @@ vendor-service-1-w62kv        1/1       Running     0          13m
 vendor-service-s2i-1-build    0/1       Completed   0          13m
 ```
 
-2. Send an HTTP GET to http://vendor.apps.lab.example.com/camel/vendor/1. This returns a 200 HTTP response code. Look at the Response body tab:
+2. Send an HTTP GET to http://vendor.apps.lab.example.com/camel/vendor/1.
+This returns a 200 HTTP response code. The response includes the information
+about the vendor with ID of 1:
 
 ```sh
 [student@workstation aloha-service]$ curl -si http://catalog.apps.lab.example.com/camel/vendor/1
@@ -401,7 +406,9 @@ vendor-service-s2i-1-build    0/1       Completed   0          13m
 
 ```
 
-3. Send an HTTP GET to http://catalog.apps.lab.example.com/camel/catalog/1. This returns a 200 HTTP response code. Look at the Response body:
+3. Send an HTTP GET to http://catalog.apps.lab.example.com/camel/catalog/1.
+This returns a 200 HTTP response code. The response includes the information
+about the catalog item with ID of 1:
 
 ```sh
 [student@workstation aloha-service]$ curl -si http://catalog.apps.lab.example.com/camel/catalog/1
@@ -417,14 +424,11 @@ HTTP/1.1 200 OK
 [student@workstation review4]$ ./block-vendor.sh
 ```
 
-Send an HTTP GET to http://catalog.apps.lab.example.com/camel/catalog/1. This returns a 500 HTTP response code. Look at the Response body:
+Send an HTTP GET to http://catalog.apps.lab.example.com/camel/catalog/1. This
+returns a 500 HTTP response code. Look at the Response body:
 
 ```sh
 [student@workstation aloha-service]$ curl -si http://catalog.apps.lab.example.com/camel/catalog/1
 ...
 ERROR Locating Vendor
 ```
-
-## Extra Credit
-
-TODO
