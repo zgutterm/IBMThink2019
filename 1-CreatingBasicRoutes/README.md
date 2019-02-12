@@ -12,7 +12,10 @@ In this exercise, you will be writing a Camel route that is capable of receiving
 ```
 - Using your favorite IDE, import or open the `IBMThink2019/1-CreatingBasicRoutes/processing-orders` project.
 
-- If using JBoss Developer Studio, click File -> Import -> Maven -> Existing Maven Projects and click Next. Navigate to `IBMThink2019/1-CreatingBasicRoutes/processing-orders` and click Ok. It may take a few moments for Maven to download the project dependencies.
+- If using JBoss Developer Studio, click File -> Import -> Maven -> Existing
+Maven Projects and click *Next*. Navigate to
+`IBMThink2019/1-CreatingBasicRoutes/processing-orders` and click *Ok*. It may
+take a few moments for Maven to download the project dependencies.
 
 Note: Your project will import with errors. This is expected. You will resolve these errors in this exercise.
 
@@ -40,16 +43,17 @@ from the `jboss-fuse-parent` bill of materials (BOM) included the project's
 
 3. Save the changes.
 
-Note: If you are having issues resolving the Maven dependencies you may need to
-update your `~/.m2/settings.xml` to include the Red Hat Maven repositories.
-An example of this file can be found in the root of this Github repository.
+_Note: If you are having issues resolving the Maven dependencies you may need to_
+_update your `~/.m2/settings.xml` to include the Red Hat Maven repositories._
+_An example of this file can be found in the root of this Github repository._
 
 ## Write Your Camel Route.
 
 ### Extend the FileRouteBuilder class with RouteBuilder
 1. Open the `FileRouteBuilder` class in your IDE.
 
-2. Update the class to extend `org.apache.camel.builder.RouteBuilder` and ensure that you are importing this package.
+2. Update the class to extend `org.apache.camel.builder.RouteBuilder` and ensure
+that you are importing this package.
 
 ```java
 import org.apache.camel.builder.RouteBuilder;
@@ -65,7 +69,8 @@ public class FileRouteBuilder extends RouteBuilder{
 
 ### Implement the configure method
 
-1. The superclass requires the implementation of the `configure()` method. Add an empty method:
+1. The superclass requires the implementation of the `configure()` method.
+Add an empty method:
 
 ```java
 //TODO Implement the configure method
@@ -77,7 +82,9 @@ public void configure() throws Exception {
 
 2. Add a file consumer to the route using the `file:` component.
 
-Configure the endpoint to consume from the orders/incoming directory and use the include option to configure the endpoint to consume only XML files where the name starts with `order`:
+Configure the endpoint to consume from the orders/incoming directory and use the
+include option to configure the endpoint to consume only XML files where the
+name starts with `order`:
 
 
 ```java
@@ -88,7 +95,9 @@ public void configure() throws Exception {
 
 3. Add a file producer to the route using the `file:` component.
 
-Configure the endpoint to create the outgoing files to the `orders/outgoing` folder. The route must throws a `GenericFileOperationException` exception if a duplicate file is provided in the `orders/incoming` folder.
+Configure the endpoint to create the outgoing files to the `orders/outgoing`
+folder. The route must throws a `GenericFileOperationException` exception if a
+duplicate file is provided in the `orders/incoming` folder.
 
 ```java
 public void configure() throws Exception {
@@ -101,7 +110,8 @@ public void configure() throws Exception {
 
 ### Populate the orders/incoming directory
 
-In a terminal, navigate to the `IBMThink2019/1-CreatingBasicRoutes/processing-orders` and run the `setup-data.sh` script:
+In a terminal, navigate to the `IBMThink2019/1-CreatingBasicRoutes/processing-orders`
+and run the `setup-data.sh` script:
 
 ```sh
 [student@workstation processing-orders]$ ./setup-data.sh
