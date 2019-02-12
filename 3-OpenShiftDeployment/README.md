@@ -31,7 +31,7 @@ The `catalog-service` project will have errors after you import. These errors ar
 Open a terminal window and run the oc login command. Replace `username`/`password`/`openshiftonlineurl` with your personal values found in the OpenShift UI. If the oc login command prompts you about using insecure connections, answer `y`:
 
 ```sh
-[student@workstation ~]$ oc login -u {username} -p {password} \
+[student@workstation 3-OpenShiftDeployment]$ oc login -u {username} -p {password} \
     https://{openshiftonlineurl}
 ...
 Use insecure connections? (y/n): y
@@ -43,7 +43,7 @@ Login successful.
 2. Create a new project called `review4-lab` in OpenShift:
 
 ```sh
-[student@workstation ~]$ oc new-project review4-lab
+[student@workstation 3-OpenShiftDeployment]$ oc new-project review4-lab
 ```
 
 ## Deploy a MySQL Pod
@@ -51,7 +51,7 @@ Login successful.
 1. Create the MySQL pod using the following `oc` command:
 
 ```sh
-[student@workstation ~]$ oc new-app \
+[student@workstation 3-OpenShiftDeployment]$ oc new-app \
     -e MYSQL_USER=bookstore \
     -e MYSQL_PASSWORD=redhat \
     -e MYSQL_DATABASE=bookstore \
@@ -60,7 +60,7 @@ Login successful.
 
 2. Make sure your pod is running using the `oc get pods` command:
 ```sh
-[student@workstation ~]$ oc get pods
+[student@workstation 3-OpenShiftDeployment]$ oc get pods
 NAME            READY     STATUS    RESTARTS   AGE
 mysql-1-x7vg8   1/1       Running   0          2m
 ```
@@ -70,13 +70,18 @@ _Note: Your pod will have a different name than the one shown in the previous ex
 
 3. Copy the name of the pod onto the clipboard and use the `oc rsync` command to push the database initialization script into the pod.
 ```sh
-[student@workstation ~]$ oc rsync . mysql-1-x7vg8:/tmp/ --exclude=* --include=create-db.sql --no-perms
+[student@workstation 3-OpenShiftDeployment]$ oc rsync . mysql-1-x7vg8:/tmp/ --exclude=* --include=create-db.sql --no-perms
+sending incremental file list
+create-db.sql
+
+sent 7,393 bytes  received 35 bytes  2,971.20 bytes/sec
+total size is 7,273  speedup is 0.98
 ```
 _Note: Be sure to swap in your pod's name in the previous command_
 
 4. Use the `oc rsh` command to run the SQL script inside the pod.
 ```sh
-[student@workstation ~]$ oc rsh mysql-1-x7vg8
+[student@workstation 3-OpenShiftDeployment]$ oc rsh mysql-1-x7vg8
 sh-4.2$
 ```
 _Note: Be sure to swap in your pod's name in the previous command_
