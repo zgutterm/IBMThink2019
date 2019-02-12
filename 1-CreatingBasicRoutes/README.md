@@ -1,5 +1,6 @@
 # Processing Orders with the File Component
 
+## Introduction
 In this exercise, you will be writing a Camel route that is capable of receiving multiple "order" files, ensuring that there are no duplicates, and then placing them into another folder using the `file` component.
 
 ## Prerequisites
@@ -16,7 +17,7 @@ In this exercise, you will be writing a Camel route that is capable of receiving
 Note: Your project will import with errors. This is expected. You will resolve these errors in this exercise.
 
 ## Update the pom.xml File
-1. Navigate to the pom.xml in the root directory of the project.
+1. Navigate to the `pom.xml` in the root directory of the project.
 
 2. Add the `camel-core` and `camel-sprint` dependencies to the project
 
@@ -33,9 +34,15 @@ Note: Your project will import with errors. This is expected. You will resolve t
 </dependency>
 ```
 
-Note: No version element is specified. This is because the version is inherited from the `jboss-fuse-parent` bill of materials (BOM) included the parent project `pom.xml` file.
+Note: No version element is specified. This is because the version is inherited
+from the `jboss-fuse-parent` bill of materials (BOM) included the project's
+`pom.xml` file.
 
 3. Save the changes.
+
+Note: If you are having issues resolving the Maven dependencies you may need to
+update your `~/.m2/settings.xml` to include the Red Hat Maven repositories.
+An example of this file can be found in the root of this Github repository.
 
 ## Write Your Camel Route.
 
@@ -113,23 +120,32 @@ noop-1.xml  order-2.xml  order-3.xml  order-4.xml  order-5.xml  order-6.xml
 
 ### Test the Route
 
-1. Run the route by using the camel:run Maven goal:
+1. Run the route by using the `camel:run` Maven goal:
 
 ```sh
 [student@workstation processing-orders]$ mvn clean camel:run
 ```
+This goal runs your Camel Spring configurations in a forked JVM from Maven.
+This makes it very easy to spin up and test your routing rules without having
+to write a `main(…)` method; it also lets you create multiple JARs to host
+different sets of routing rules and easily test them independently.
 
+How this works is that the plugin compiles the source code in the Maven project,
+then boots up a Spring `ApplicationContext` using the XML confiuration files
+found on the classpath at `META-INF/spring/*.xml`.
 
-2. Open a new terminal window and inspect the orders/outgoing folder to verify that only order files are available:
+2. Open a new terminal window and inspect the `orders/outgoing` folder to verify
+that only order files are available:
 
 ```sh
 [student@workstation processing-orders]$ ls orders/outgoing
 order-2.xml  order-3.xml  order-4.xml  order-5.xml  order-6.xml
 ```
 
-Notice that the file named `noop-1.xml` is not present.
+_Notice that the file named `noop-1.xml` is not present._
 
-3. Run the `./duplicate-files.sh` script in the `processing-orders` directory to recreate the files to trigger a duplicate file error.
+3. Run the `./duplicate-files.sh` script in the `processing-orders` directory to
+recreate the files to trigger a duplicate file error.
 
 ```sh
 [student@workstation processing-orders]$ ./duplicate-files.sh
@@ -137,7 +153,8 @@ Notice that the file named `noop-1.xml` is not present.
 'Duplication complete!'
 ```
 
-4. Return to the terminal running the Camel route to see the `GenericFileOperationException` as a result of the duplicate files.
+4. Return to the terminal running the Camel route to see the
+`GenericFileOperationException` as a result of the duplicate files.
 
 ```sh
 INFO  Received hang up - stopping the main instance.
@@ -149,12 +166,16 @@ INFO  Apache Camel 2.21.0.fuse-000077-redhat-1 (CamelContext: jb421Context) upti
 INFO  Apache Camel 2.21.0.fuse-000077-redhat-1 (CamelContext: jb421Context) is shutdown in 0.044 seconds
 ```
 
-5. Terminate the route using `Ctrl+C` in the terminal where the route is running. If you are using JBDS/Eclipse, right click on the project and click `Close Project`.
+5. Terminate the route using `Ctrl+C` in the terminal where the route is
+running. If you are using JBDS/Eclipse, right click on the project and
+click `Close Project`.
 
 ## Extra Credit
 
-Having your Camel route completely crash whenever there is a duplicate order isn't a very good design. Take a look at the `file` component documentation here: http://camel.apache.org/file2.html
+- Having your Camel route completely crash whenever there is a duplicate order
+isn't a very good design. Take a look at the `file` component documentation
+here: http://camel.apache.org/file2.html
 
-What are some better implementations?
+- What are some better implementations?
 
-Update the route to safely handle duplicate orders.
+- Update the route to safely handle duplicate orders.
