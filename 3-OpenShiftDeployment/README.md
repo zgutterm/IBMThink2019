@@ -58,13 +58,14 @@ Login successful.
     -i openshift/mysql
 ```
 
-2. Wait until your pod is *fully* running using the `oc get pods` command (you should only see one pod running with a similar name to the below output):
+2. Make sure your pod is running using the `oc get pods -w` command:
 ```sh
-[student@workstation 3-OpenShiftDeployment]$ oc get pods
+[student@workstation 3-OpenShiftDeployment]$ oc get pods -w
 NAME            READY     STATUS    RESTARTS   AGE
 mysql-1-x7vg8   1/1       Running   0          2m
 ```
-_Note: If your pod is still not started after a few minutes, it may need to be restarted. Try running `oc deploy mysql --cancel` and then `oc deploy mysql --latest`_
+_Note: Your pod will have a different name than the one shown in the previous example._
+
 
 
 3. Copy the name of the pod onto the clipboard and use the `oc rsync` command to push the database initialization script into the pod.
@@ -93,9 +94,7 @@ sh-4.2$ mysql -ubookstore -predhat bookstore < /tmp/create-db.sql
 
 ## Prepare the Fabric8 Plugin
 
-1. TODO -- Make image stream for fuse on openshift available -- Also check for next step to make the name correct
-
-2. Open the `pom.xml` file for the `catalog-service`. Include the `openshift/java` image stream name:
+1. Open the `pom.xml` file for the `catalog-service`. Include the `openshift/java` image stream name:
 
 ```xml
 ...
@@ -149,6 +148,11 @@ readinessProbe:
            successThreshold: 1
            timeoutSeconds: 5
 ```
+The livesness and readiness probes are used by Kubernetes to determine if a pod
+is healthy and ready to serve requests.  Pods that do not return an HTTP status
+of `200 OK` when their probes are used by Kuberenetes will not be used to serve
+requests.  Kubernetes will also attempt to kill and restart unhealthy containers
+in the event that the problem is temporary.
 
 
 
@@ -162,7 +166,8 @@ spec:
     kind: Service
     name: ${project.artifactId}
 ```
-This `Route` tells OpenShift to expose the OpenShift service object for the `catalog-service` application using port 8082.
+This `Route` tells OpenShift to expose the OpenShift service object for the
+`catalog-service` application using port 8082.
 
 
 ## Finish the Catalog-Service Routes
