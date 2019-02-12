@@ -33,21 +33,14 @@ public class RestRouteBuilder extends RouteBuilder {
 				.to("sql:select id, author, description, vendor_id as vendorId from bookstore.CatalogItem where id=:#catalogId"
 							+ "?dataSource=mysqlDataSource&outputType=SelectOne"
 							+ "&outputClass=com.redhat.training.jb421.model.CatalogItem")
-
-				//TODO: invoke the SqlProcessor
-				.process(new SqlProcessor())
-				.to("direct:getVendor")
 				.choice()
-					.when(body().isEqualTo(VENDOR_ERROR_MSG))
-						.setHeader(Exchange.HTTP_RESPONSE_CODE, constant(500))
-						.transform(constant("ERROR Locating Vendor"))
+					.when(header("CamelSqlRowCount").isGreaterThan(0))
+						//TODO: invoke the SqlProcessor
+						.process(new SqlProcessor())
+						.to("direct:getVendor")
+						.to("direct:processVendorResult")
 					.otherwise()
-						//TODO: invoke the ResponseProcessor
-						.process(new ResponseProcessor())
-						.marshal().json(JsonLibrary.Jackson)
-
-				.end();
-
+						.setBody(simple("Error locating CatalogItem"));
 
 
 		from("direct:getVendor")
@@ -71,6 +64,19 @@ public class RestRouteBuilder extends RouteBuilder {
 			.onFallback()
 				.transform(constant(VENDOR_ERROR_MSG))
 			.endHystrix();
+		
+		from("direct:processVendorResult")
+			.log("#{body}")
+			.choice()
+				.when(body().isEqualTo(VENDOR_ERROR_MSG))
+					.setHeader(Exchange.HTTP_RESPONSE_CODE, constant(500))
+					.transform(constant("ERROR Locating Vendor"))
+				.otherwise()
+					//TODO: invoke the ResponseProcessor
+					.process(new ResponseProcessor())
+					.marshal().json(JsonLibrary.Jackson)
+			.end();
+
 
 	}
 
