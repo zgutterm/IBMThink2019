@@ -1,31 +1,43 @@
 # Microservies with Camel Routes
 
-In this exercise, you will implement and execute two Camel-based microservices. The first service, the aloha service, returns a simple greeting. The second service behaves similarly, but includes an endpoint that calls the aloha service.
+## Introduction
+In this exercise, you will implement and execute two Camel-based microservices
+using the Camel REST DSL. The first service, the `aloha-service`, returns a
+simple greeting. The second service `hola-service` behaves similarly, but
+includes a second endpoint that chains a call to the `aloha-service`.
 
 ## Prerequisites
 
--   Ensure that you have Maven installed.
+- Ensure that you have Maven installed.
 
--   Clone the lab repository (or download it as a ZIP):
+- Clone the lab repository (or download it as a ZIP):
+```sh
+$ git clone https://github.com/zgutterm/IBMThink2019.git
+```
+- Using your favorite IDE, import or open the
+`IBMThink2019/2-CamelREST/camel-microservices/hola-service` project and
+`IBMThink2019/2-CamelREST/camel-microservices/aloha-service` project.
 
+- If using JBoss Developer Studio, click File -> Import -> Maven -> Existing
+Maven Projects and click Next. Navigate to
+`IBMThink2019/2-CamelREST/camel-microservices/hola-service` and click *Ok*.
 
-      $ git clone https://github.com/zgutterm/IBMThink2019.git
+Note: It may take a few moments for Maven to download the project dependencies.
 
--   Using your favorite IDE, import or open the `IBMThink2019/2-CamelREST/camel-microservices/hola-service` project and `IBMThink2019/2-CamelREST/camel-microservices/aloha-service` project.
+- Similarly, import the `IBMThink2019/2-CamelREST/camel-microservices/aloha-service`
+project.
 
--   If using JBoss Developer Studio, click File -> Import -> Maven -> Existing Maven Projects and click Next. Navigate to `IBMThink2019/2-CamelREST/camel-microservices/hola-service` and click Ok. It may take a few moments for Maven to download the project dependencies.
-
--   Similarly, import the `IBMThink2019/2-CamelREST/camel-microservices/aloha-service` project.
-
-Note: The `hola-service` will have errors. You will resolve this at a later step.
+Note: The `hola-service` will have errors. You will resolve these in a later step.
 
 ## Implement the Aloha service
 
 ### Create the REST service
 
-The Aloha service should take a single parameter so that requests to the `/aloha` service will return `"Hello, {name}"`.
+The Aloha service must take a single input parameter of a name so that requests to the
+`/aloha` service will return `"Hello, {name}"`.
 
-1.  Navigate to the `aloha-service/src/main/java/com/redhat/training/jb421/RestRouteBuilder.java` file.
+1. Navigate to the
+`aloha-service/src/main/java/com/redhat/training/jb421/RestRouteBuilder.java` file.
 
 2.  Create an endpoint at `/aloha` in the `configure()` method:
 
@@ -64,11 +76,14 @@ public void configure() throws Exception {
 
 ### Format the Aloha Service Response
 
-1.  The endpoint now accepts a parameter at `/aloha`, but doesn't provide any kind of response.
+1.  The endpoint now accepts a parameter at `/aloha`, but doesn't provide any
+kind of response.
 
-2.  The `direct` component is a simple way to connect two routes synchronously. In this instance, we can use this component to return our greeting.
+2.  The `direct` component is a simple way to connect two routes synchronously.
+You can think of `direct` routes as similar to a method or sub-routine. In this
+instance, we can use this component to return our greeting.
 
-3.  In the same `configure()` method below the `rest` route, add a route `from` "sayHello" and set the name of the route as `HelloREST`.
+3.  In the same `configure()` method below the `rest` route, add a route `from("direct:sayHello")` and set the name of the route as `HelloREST`.
 
 ```java
 rest("/aloha")
@@ -82,7 +97,8 @@ from("direct:sayHello").routeId("HelloREST")
       + "}\n");
 ```
 
-4.  Finally, add a `to` at the end of the REST route to connect the two routes:
+4.  Finally, add a `to("direct:sayHello")` at the end of the REST route to
+connect the two routes:
 
 ```java
 @Override
@@ -103,7 +119,8 @@ public void configure() throws Exception {
 
 5.  Save the file.
 
-Now when you call the aloha-service using an HTTP GET request, the service returns with:
+Now when you call the `aloha-service` using an HTTP `GET` request, and the name
+"Developer", the service returns the following response:
 
 ```json
 {
@@ -113,9 +130,11 @@ Now when you call the aloha-service using an HTTP GET request, the service retur
 
 ## Update the pom.xml File
 
-To use the health check endpoints, we need to add the Spring Boot Actuator dependency. This enables the `/health` endpoint.
+To use the health check endpoints, we need update our `pom.xml` to add the
+Spring Boot Actuator dependency. This library automatically enables the
+`/health` endpoint, and can potentially offer other monitoring endpoints.
 
-1.  Navigate to the pom.xml for EACH project and add the following dependency:
+1.  Navigate to the `pom.xml` for both of the projects and add the following dependency:
 
 ```xml
 <!--TODO Add Spring Boot Actuator Starter -->
@@ -143,9 +162,11 @@ Navigate to the pom.xml for `hola-service` and add the following dependency:
 
 1.  Open the `hola-service/src/main/java/com/redhat/training/jb421/RestRouteBuilder.java` file.
 
-In order to reach the aloha service, you need to know the port and host name of the service is running on.
+In order to reach the aloha service, you need to know the port and host name of
+the service is running on.
 
-2.  Update the `alohaHost` and `alohaPort` variables by injecting the values from the `application.properties` file.
+2.  Update the `alohaHost` and `alohaPort` variables by injecting the values
+from the `application.properties` file.
 
 ```java
 //TODO Inject value from configuration
@@ -164,7 +185,7 @@ of the header values set by the REST DSL, so we need to make sure their values
 are set properly for the outgoing call to the `aloha-service` instead of being
 set for the incoming REST call.
 
-1.  Unset the header value Exchange.HTTP_URI:
+1. Unset the header value `Exchange.HTTP_URI`:
 
 ```java
 from("direct:callAloha")
@@ -172,9 +193,9 @@ from("direct:callAloha")
   .removeHeader(Exchange.HTTP_URI)
 ```
 
-2.  Set the header value `Exchange.HTTP_PATH`using the `header.name` value that was
-    passed into the `hola-chained` endpoint originally to forward the name on to the
-    `aloha-service`.
+2. Set the header value `Exchange.HTTP_PATH`using the `header.name` value that
+was passed into the `hola-chained` endpoint originally to forward the name on
+to the `aloha-service`.
 
 ```java
 from("direct:callAloha")

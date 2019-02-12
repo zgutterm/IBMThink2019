@@ -22,7 +22,7 @@ REST service to retrieve the vendor name based on the ID that is found in the
 database.
 
 ## Prerequisites
-Ensure that you have Maven installed.
+Ensure that you have Java, Maven, and an IDE installed.
 
 Ensure that you have an OpenShift Online account and that your environment is
 available.
