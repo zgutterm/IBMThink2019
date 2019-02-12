@@ -47,17 +47,10 @@ and select 'Command Line Tools' from the drop down when clicking the question ma
 
 3. Extract the executable file from the tar (on Linux and Mac), or from the zip (on Windows)
 
-#### Linux
+#### Mac and Linux
 ```bash
-tar -xvzf openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit.tar.gz
-cp openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit/oc /usr/local/bin/
-chmod +x /usr/local/bin/oc
-```
-
-#### Mac
-```bash
-unzip openshift-origin-client-tools-v3.11.0-0cbc58b-mac.zip
-cp openshift-origin-client-tools-v3.11.0-0cbc58b-mac/oc /usr/local/bin/
+tar -xvzf oc.tar.gz
+cp oc /usr/local/bin/
 chmod +x /usr/local/bin/oc
 ```
 
