@@ -68,8 +68,9 @@ _Note: If your pod is still not started after a few minutes, it may need to be r
 
 
 3. Copy the name of the pod onto the clipboard and use the `oc rsync` command to push the database initialization script into the pod.
-```
-[student@workstation 3-OpenShiftDeployment]$ oc rsync . mysql-1-x7vg8:/tmp/ --exclude=* --include=create-db.sql --no-perms
+```sh
+[student@workstation 3-OpenShiftDeployment]$ oc rsync . mysql-1-x7vg8:/tmp/ \
+--exclude=* --include=create-db.sql --no-perms
 sending incremental file list
 create-db.sql
 
