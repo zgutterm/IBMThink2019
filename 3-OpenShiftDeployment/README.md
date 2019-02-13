@@ -231,7 +231,23 @@ application and create the required resources on OpenShift.
 
 ```sh
 [student@workstation vendor-service]$ oc status
+In project ibm-think on server https://api.starter-us-west-2.openshift.com:443
+
+svc/mysql - 172.30.150.30:3306
+  dc/mysql deploys openshift/mysql:5.7
+    deployment #1 deployed 8 hours ago - 1 pod
+
+http://vendor-service-review4.7e14.starter-us-west-2.openshiftapps.com to pod port 8081 (svc/vendor-service)
+  dc/vendor-service-solution deploys istag/vendor-service:1.0 <-
+    bc/vendor-service-s2i source builds uploaded code on openshift/java:latest
+    deployment #1 running for 6 seconds - 0/1 pods
+
+View details with 'oc describe <resource>/<name>' or list everything with 'oc get all'.
 ```
+In this example the `vendor-service` can be reached from outside the OpenShift cluster
+using the following URL:
+http://vendor-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/vendor/{id}
+
 
 ## Prepare the Maven Fabric8 Plugin - Catalog Service
 
@@ -307,10 +323,25 @@ This `Route` tells OpenShift to expose the OpenShift service object for the
 
 
 ## Finish the Catalog-Service Routes
+
+### Update the application.properties file to use OCP service discovery
+1. Open the `application.properties` file located inside `src/main/resources`.
+Use the OCP provided environment variables to reference the host name and port
+number where the `vendor-service` will be located.
+```properties
+vendorHost = ${VENDOR_SERVICE_SOLUTION_SERVICE_HOST}
+vendorPort = ${VENDOR_SERVICE_SOLUTION_SERVICE_PORT}
+```
+In OpenShift, a `Service` object acts a load balancer to all of the `Pods`
+that are running a specific container image.  In this example, the `fabric8`
+Maven plugin creates a `Service` that fronts the `vendor-service` pods.  This
+service also automatically creates environment variables for the host and port
+of the `vendor-service`.
+
 ### Add a connection to the vendor service
 1. Update the `RestRouteBuilder` class to invoke the `vendor-service`
 microservice using the Camel HTTP4 component and the provided `vendorHost` and
-`vendorPort` properties. Recover the vendor id from the `catalog_vendor_id`
+`vendorPort` variables. Recover the vendor id from the `catalog_vendor_id`
 header set by the `SqlProcessor` processor implementation:
 
 ```java
@@ -400,39 +431,40 @@ vendor-service-1-w62kv        1/1       Running     0          13m
 vendor-service-s2i-1-build    0/1       Completed   0          13m
 ```
 
-2. Send an HTTP GET to http://vendor.apps.lab.example.com/camel/vendor/1.
-This returns a 200 HTTP response code. The response includes the information
+2. Send an HTTP GET to http://vendor-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/vendor/1.
+This returns a `200 OK` HTTP response code. The response includes the JSON data
 about the vendor with ID of 1:
 
 ```sh
-[student@workstation aloha-service]$ curl -si http://catalog.apps.lab.example.com/camel/vendor/1
+[student@workstation aloha-service]$ curl -si http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/vendor/1
 {"id":1,"name":"Bookmart, Inc."}
 
 ```
 
-3. Send an HTTP GET to http://catalog.apps.lab.example.com/camel/catalog/1.
-This returns a 200 HTTP response code. The response includes the information
+3. Send an HTTP `GET` to http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/catalog/1.
+This returns a `200 OK` HTTP response code. The response includes the information
 about the catalog item with ID of 1:
 
 ```sh
-[student@workstation aloha-service]$ curl -si http://catalog.apps.lab.example.com/camel/catalog/1
+[student@workstation aloha-service]$ curl -si http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/catalog/1
 HTTP/1.1 200 OK
 ...
 {"id":1,"description":"description 1","author":"Lt. Howard Payson","vendorName":"Bookmart, Inc."}
 ```
 
-4. Run the block-vendor.sh bash script to block connections to the vendor-service microservice:
+4. Run the `block-vendor.sh` bash script to block connections to the
+`vendor-service` microservice:
 
 ```sh
 [student@workstation catalog-service]$ cd ..
 [student@workstation review4]$ ./block-vendor.sh
 ```
 
-Send an HTTP GET to http://catalog.apps.lab.example.com/camel/catalog/1. This
+Send an HTTP GET to http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/catalog/1. This
 returns a 500 HTTP response code. Look at the Response body:
 
 ```sh
-[student@workstation aloha-service]$ curl -si http://catalog.apps.lab.example.com/camel/catalog/1
+[student@workstation aloha-service]$ curl -si http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/catalog/1
 ...
 ERROR Locating Vendor
 ```
