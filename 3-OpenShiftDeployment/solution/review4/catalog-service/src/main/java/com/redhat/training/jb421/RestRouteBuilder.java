@@ -66,7 +66,6 @@ public class RestRouteBuilder extends RouteBuilder {
 			.endHystrix();
 		
 		from("direct:processVendorResult")
-			.log("#{body}")
 			.choice()
 				.when(body().isEqualTo(VENDOR_ERROR_MSG))
 					.setHeader(Exchange.HTTP_RESPONSE_CODE, constant(500))

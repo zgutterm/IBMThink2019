@@ -452,19 +452,19 @@ HTTP/1.1 200 OK
 {"id":1,"description":"description 1","author":"Lt. Howard Payson","vendorName":"Bookmart, Inc."}
 ```
 
-4. Run the `block-vendor.sh` bash script to block connections to the
+4. Run the `oc delete` command to block connections to the
 `vendor-service` microservice:
 
 ```sh
-[student@workstation catalog-service]$ cd ..
-[student@workstation review4]$ ./block-vendor.sh
+[student@workstation catalog-service]$ oc delete svc vendor-service-solution
+
 ```
 
 Send an HTTP GET to http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/catalog/1. This
 returns a 500 HTTP response code. Look at the Response body:
 
 ```sh
-[student@workstation aloha-service]$ curl -si http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/catalog/1
+[student@workstation catalog-service]$ curl -si http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/catalog/1
 ...
 ERROR Locating Vendor
 ```
