@@ -191,11 +191,12 @@ livenessProbe:
   successThreshold: 1
   timeoutSeconds: 5
 ```
-The livesness and readiness probes are used by Kubernetes to determine if a pod
+The liveness and readiness probes are used by Kubernetes to determine if a pod
 is healthy and ready to serve requests.  Pods that do not return an HTTP status
-of `200 OK` when their probes are used by Kuberenetes will not be used to serve
+of `200 OK` when their probes are called by Kuberenetes will not be used to serve
 requests.  Kubernetes will also attempt to kill and restart unhealthy containers
-in the event that the problem is temporary.
+in the event that the problem is temporary and can be resolved with a simple
+restart.
 
 
 
@@ -226,7 +227,11 @@ application and create the required resources on OpenShift.
 ```
 
 2. Capture the hostname assigned to OpenShift Route that fronts the
-`vendor-service`.  Use the `oc status` command to find
+`vendor-service`.  Use the `oc status` command to find the hostname:
+
+```sh
+[student@workstation vendor-service]$ oc status
+```
 
 ## Prepare the Maven Fabric8 Plugin - Catalog Service
 
@@ -255,7 +260,6 @@ definition:
     <executions>
 ...
 ```
-
 
 2. In the `catalog-service` open the `src/main/fabric8/deployment.yml` file.
 Update the readiness probe and the liveness probe to both use path `/health`
