@@ -35,7 +35,7 @@ _Note: The `hola-service` will have errors. You will resolve these in a later st
 ### Create the REST service
 
 The Aloha service must take a single input parameter of a name so that requests to the
-`/aloha` service will return `"Hello, {name}"`.
+`/aloha` service will return `"Aloha, {name}"`.
 
 1. Open the `aloha-service/src/main/java/com/redhat/training/jb421/RestRouteBuilder.java`
 file.
