@@ -417,10 +417,12 @@ failing.
   //TODO: Invoke the vendor-service microservice
   .to("http4:"+ vendorHost +":"+ vendorPort +"/camel/vendor")
   .process(new VendorProcessor())
+  //TODO add fallback for circuitbreaker
 .onFallback()
   .transform(constant(VENDOR_ERROR_MSG))
 .endHystrix();
 ```
+
 
 
 ## Deploy the `catalog-service`
