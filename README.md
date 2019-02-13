@@ -13,5 +13,6 @@ This lab will guide you to create your very first Red Hat Fuse-based microservic
 - Copy the provided settings.xml file to ~/.m2/settings.xml
 - JDK 1.8 or above (http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
 - Git (https://git-scm.com/downloads)
+- cUrl (should only not have it if you are on windows 7) (https://curl.haxx.se/windows/)
 - Red Hat Developer Account (http://developers.redhat.com/register)
 - Request an OpenShift Online Cluster (https://github.com/zgutterm/IBMThink2019/tree/master/0-CreateOpenshiftOnlineAccount)
