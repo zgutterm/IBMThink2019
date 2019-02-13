@@ -436,7 +436,7 @@ This returns a `200 OK` HTTP response code. The response includes the JSON data
 about the vendor with ID of 1:
 
 ```sh
-[student@workstation aloha-service]$ curl -si http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/vendor/1
+[student@workstation catalog-service]$ curl -si http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/vendor/1
 {"id":1,"name":"Bookmart, Inc."}
 
 ```
@@ -446,25 +446,37 @@ This returns a `200 OK` HTTP response code. The response includes the informatio
 about the catalog item with ID of 1:
 
 ```sh
-[student@workstation aloha-service]$ curl -si http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/catalog/1
+[student@workstation catalog-service]$ curl -si http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/catalog/1
 HTTP/1.1 200 OK
 ...
 {"id":1,"description":"description 1","author":"Lt. Howard Payson","vendorName":"Bookmart, Inc."}
 ```
 
-4. Run the `oc delete` command to block connections to the
-`vendor-service` microservice:
+4. Run the `oc scale` command to scale the number of pods running the
+`vendor-service` microservice to `0` effectively temporarily taking it offline:
 
 ```sh
-[student@workstation catalog-service]$ oc delete svc vendor-service-solution
-
+[student@workstation catalog-service]$ oc scale --replicas=0 dc vendor-service
+deploymentconfig "vendor-service" scaled
 ```
 
-Send an HTTP GET to http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/catalog/1. This
-returns a 500 HTTP response code. Look at the Response body:
+5. Send an HTTP GET to http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/catalog/1.
+This returns a `500 Error` HTTP response code. Look at the Response body:
 
 ```sh
 [student@workstation catalog-service]$ curl -si http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/catalog/1
 ...
 ERROR Locating Vendor
+```
+
+6. Send 3 more of the same HTTP request until you observe the circuit breaker
+working and responses returning immediately instead of waiting for the requests
+to timeout.
+
+7.  Run the `oc scale` command to scale the number of pods running the
+`vendor-service` microservice to `1`:
+
+```sh
+[student@workstation catalog-service]$ oc scale --replicas=0 dc vendor-service
+deploymentconfig "vendor-service" scaled
 ```
