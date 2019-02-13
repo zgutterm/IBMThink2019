@@ -1,25 +1,31 @@
 # Processing Orders with the File Component
 
 ## Introduction
-In this exercise, you will be writing a Camel route that is capable of receiving multiple "order" files, ensuring that there are no duplicates, and then placing them into another folder using the `file` component.
+In this exercise, you will write a very basic Camel route that receives multiple
+"order" files, ensuring that there are no duplicates, and then places them into
+another folder using the `file` component.
 
 ## Prerequisites
-- Ensure that you have Maven installed.
+Ensure that you have Maven installed.
 
-- Clone the lab repository (or download it as a ZIP):
+Clone the lab repository (or download it as a ZIP):
 ```sh
   $ git clone https://github.com/zgutterm/IBMThink2019.git
 ```
-- Using your favorite IDE, import or open the `IBMThink2019/1-CreatingBasicRoutes/processing-orders` project.
+Using your favorite IDE, import or open the `IBMThink2019/1-CreatingBasicRoutes/processing-orders` project.
 
-- If using JBoss Developer Studio, click File -> Import -> Maven -> Existing
+If using JBoss Developer Studio, click File -> Import -> Maven -> Existing
 Maven Projects and click *Next*. Navigate to
 `IBMThink2019/1-CreatingBasicRoutes/processing-orders` and click *Ok*. It may
 take a few moments for Maven to download the project dependencies.
 
-Note: Your project will import with errors. This is expected. You will resolve these errors in this exercise.
+_Note: Your project will import with errors. This is expected. You will resolve these errors in this exercise._
 
 ## Update the pom.xml File
+First we need to include the `camel-core` and `camel-spring` Maven dependencies
+in our `pom.xml` file.  This gives us access to the Camel APIs that we need to
+begin creating Camel routes.
+
 1. Navigate to the `pom.xml` in the root directory of the project.
 
 2. Add the `camel-core` and `camel-sprint` dependencies to the project
@@ -37,9 +43,9 @@ Note: Your project will import with errors. This is expected. You will resolve t
 </dependency>
 ```
 
-Note: No version element is specified. This is because the version is inherited
-from the `jboss-fuse-parent` bill of materials (BOM) included the project's
-`pom.xml` file.
+_Note: No version element is specified on these dependencies. This is because_
+_the version is inherited from the `jboss-fuse-parent` bill of materials (BOM)_
+_included the project's `pom.xml` file._
 
 3. Save the changes.
 
@@ -49,7 +55,10 @@ _An example of this file can be found in the root of this Github repository._
 
 ## Write Your Camel Route.
 
-### Extend the FileRouteBuilder class with RouteBuilder
+### Make the FileRouteBuilder class extend the RouteBuilder superclass
+`RouteBuilder` is a base class which is extended from to create routing rules
+using the DSL. Instances of `RouteBuilder` are then added to the `CamelContext`.
+
 1. Open the `FileRouteBuilder` class in your IDE.
 
 2. Update the class to extend `org.apache.camel.builder.RouteBuilder` and ensure
@@ -108,11 +117,39 @@ public void configure() throws Exception {
 
 4. Save your changes.
 
+### Review the camel-context configuration
+In order to connect our `RouteBuilder` to the `CamelContext` it must be
+configured as a bean in the Spring XML configuration file.
+
+1.  Open the `src/main/resources/META-INF/spring/bundle-context.xml` file in
+your IDE:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring
+       http://camel.apache.org/schema/spring/camel-spring.xsd">
+    <bean class="com.redhat.training.jb421.FileRouteBuilder" id="fileRouteBuilder"/>
+    <camelContext id="jb421Context" xmlns="http://camel.apache.org/schema/spring">
+        <routeBuilder ref="fileRouteBuilder"/>
+    </camelContext>
+</beans>
+```
+Notice the reference to the `FileRouteBuilder` class which is assigned an ID of
+`fileRouteBuilder`.  This ID is used in the `ref` attribute of the `routeBuilder`
+tag found inside the `camelContext` tag.
+
 ### Populate the orders/incoming directory
 
-``If you are using a Windows machine, you need to manually copy the files from IBMThink2019/1-CreatingBasicRoutes/orders into a new folder IBMThink2019/1-CreatingBasicRoutes/processing-orders/orders/incoming/. Rename one of the files to noop-1.xml and move on to the next step.``
+**If you are using a Windows machine, you need to manually copy the files from**
+**`IBMThink2019/1-CreatingBasicRoutes/orders` into a new folder**
+**`IBMThink2019/1-CreatingBasicRoutes/processing-orders/orders/incoming/`.**
+**Rename one of the files to noop-1.xml and move on to the next step.**
 
-In a terminal, navigate to the `IBMThink2019/1-CreatingBasicRoutes/processing-orders`
+1. In a terminal window, navigate to the `IBMThink2019/1-CreatingBasicRoutes/processing-orders`
 and run the `setup-data.sh` script:
 
 ```sh
@@ -121,7 +158,7 @@ and run the `setup-data.sh` script:
 'Preparation complete!'
 ```
 
-Verify that the order xml files were generated in the correct folder:
+2. Verify that the order xml files were generated in the correct folder:
 
 ```sh
 [student@workstation processing-orders]$ ls orders/incoming
@@ -137,10 +174,11 @@ noop-1.xml  order-2.xml  order-3.xml  order-4.xml  order-5.xml  order-6.xml
 [student@workstation processing-orders]$ mvn clean camel:run
 ```
 
-This goal runs your Camel Spring configurations in a forked JVM from Maven.
-This makes it very easy to spin up and test your routing rules without having
-to write a `main(…)` method; it also lets you create multiple JARs to host
-different sets of routing rules and easily test them independently.
+This goal uses the `camel-maven-plugin` to run your Camel Spring configurations
+in a forked JVM from Maven. This makes it very easy to spin up and test your
+routing rules without having to write a `main(…)` method; it also lets you
+create multiple JARs to host different sets of routing rules and easily test
+them independently.
 
 The plugin compiles the source code in the Maven project,
 then boots up a Spring `ApplicationContext` using the XML confiuration files
@@ -163,7 +201,10 @@ recreate the files to trigger a duplicate file error.
 'Duplication complete!'
 ```
 
-_If you are running this exercise on a windows machine, rather than running this script, copy the files from IBMThink2019/1-CreatingBasicRoutes/orders into IBMThink2019/1-CreatingBasicRoutes/processing-orders/orders/incoming/ again_
+**If you are running this exercise on a windows machine, rather than running**
+**this script, copy the files from `IBMThink2019/1-CreatingBasicRoutes/orders`**
+**into `IBMThink2019/1-CreatingBasicRoutes/processing-orders/orders/incoming/`**
+**again.**
 
 4. Return to the terminal running the Camel route to see the
 `GenericFileOperationException` as a result of the duplicate files.
@@ -177,8 +218,8 @@ INFO  Apache Camel 2.21.0.fuse-000077-redhat-1 (CamelContext: jb421Context) upti
 INFO  Apache Camel 2.21.0.fuse-000077-redhat-1 (CamelContext: jb421Context) is shutdown in 0.044 seconds
 ```
 
-5. Terminate the route using `Ctrl+C` in the terminal where the route is
-running. If you are using JBDS/Eclipse, right click on the project and
+5. Terminate the route execution using `Ctrl+C` in the terminal window where the
+route is running. If you are using JBDS/Eclipse, right click on the project and
 click `Close Project`.
 
 ## Extra Credit
