@@ -1,4 +1,4 @@
-# Microservies with Camel Routes
+# Microservices with Camel Routes
 
 ## Introduction
 In this exercise, you will implement and execute two Camel-based microservices
@@ -8,26 +8,27 @@ includes a second endpoint that chains a call to the `aloha-service`.
 
 ## Prerequisites
 
-- Ensure that you have Maven installed.
+Ensure that you have Maven installed.
 
-- Clone the lab repository (or download it as a ZIP):
+Clone the lab repository (or download it as a ZIP):
 ```sh
 $ git clone https://github.com/zgutterm/IBMThink2019.git
 ```
-- Using your favorite IDE, import or open the
+
+Using your favorite IDE, import or open the
 `IBMThink2019/2-CamelREST/camel-microservices/hola-service` project and
 `IBMThink2019/2-CamelREST/camel-microservices/aloha-service` project.
 
-- If using JBoss Developer Studio, click File -> Import -> Maven -> Existing
+If using JBoss Developer Studio, click File -> Import -> Maven -> Existing
 Maven Projects and click Next. Navigate to
 `IBMThink2019/2-CamelREST/camel-microservices/hola-service` and click *Ok*.
 
-Note: It may take a few moments for Maven to download the project dependencies.
+_Note: It may take a few moments for Maven to download the project dependencies._
 
-- Similarly, import the `IBMThink2019/2-CamelREST/camel-microservices/aloha-service`
+Similarly, import the `IBMThink2019/2-CamelREST/camel-microservices/aloha-service`
 project.
 
-Note: The `hola-service` will have errors. You will resolve these in a later step.
+_Note: The `hola-service` will have errors. You will resolve these in a later step._
 
 ## Implement the Aloha service
 
@@ -36,8 +37,8 @@ Note: The `hola-service` will have errors. You will resolve these in a later ste
 The Aloha service must take a single input parameter of a name so that requests to the
 `/aloha` service will return `"Hello, {name}"`.
 
-1. Navigate to the
-`aloha-service/src/main/java/com/redhat/training/jb421/RestRouteBuilder.java` file.
+1. Open the `aloha-service/src/main/java/com/redhat/training/jb421/RestRouteBuilder.java`
+file.
 
 2.  Create an endpoint at `/aloha` in the `configure()` method:
 
@@ -76,14 +77,15 @@ public void configure() throws Exception {
 
 ### Format the Aloha Service Response
 
-1.  The endpoint now accepts a parameter at `/aloha`, but doesn't provide any
+The endpoint now accepts a parameter at `/aloha`, but doesn't provide any
 kind of response.
 
-2.  The `direct` component is a simple way to connect two routes synchronously.
+The `direct` component is a simple way to connect two routes synchronously.
 You can think of `direct` routes as similar to a method or sub-routine. In this
 instance, we can use this component to return our greeting.
 
-3.  In the same `configure()` method below the `rest` route, add a route `from("direct:sayHello")` and set the name of the route as `HelloREST`.
+1.  In the same `configure()` method below the `rest` route, add a route
+`from("direct:sayHello")` and set the name of the route as `HelloREST`.
 
 ```java
 rest("/aloha")
@@ -97,7 +99,7 @@ from("direct:sayHello").routeId("HelloREST")
       + "}\n");
 ```
 
-4.  Finally, add a `to("direct:sayHello")` at the end of the REST route to
+2.  Add a `to("direct:sayHello")` at the end of the REST route to
 connect the two routes:
 
 ```java
@@ -117,7 +119,7 @@ public void configure() throws Exception {
 }
 ```
 
-5.  Save the file.
+3.  Save the file.
 
 Now when you call the `aloha-service` using an HTTP `GET` request, and the name
 "Developer", the service returns the following response:
@@ -128,8 +130,13 @@ Now when you call the `aloha-service` using an HTTP `GET` request, and the name
 }
 ```
 
-## Update the pom.xml File
+## Add a `/health` health check endpoint using Spring Boot Actuator
+The `/health` endpoint is used to check the health or state of the running
+application. It is usually exercised by monitoring software to alert us if the
+running instance goes down or gets unhealthy for other reasons such as
+connectivity issues with our database, or lack of disk space.
 
+### Update the `pom.xml` file
 To use the health check endpoints, we need update our `pom.xml` to add the
 Spring Boot Actuator dependency. This library automatically enables the
 `/health` endpoint, and can potentially offer other monitoring endpoints.
@@ -144,7 +151,48 @@ Spring Boot Actuator dependency. This library automatically enables the
 </dependency>
 ```
 
+2. Save the file.
+
+### Implement a custom health check to verify database connectivity
+
+In addition to basic `/health` endpoints, the Spring Boot actuator supports
+creating custom health checks.  A custom health check can collect any type of
+custom health data specific to the application and automatically expose it
+through the `/health` endpoint:
+
+1. Open the `DatabaseHealthCheck.java` file in the `hola-service` project. This
+class is responsible for ensuring that there is a connection to the database.
+This class implements the `HealthIndicator` interface, which the Spring Boot
+Actuator starter provides. The `HealthIndicator` interface requires a single
+method named `health()`.
+
+_Note: This service doesn't actually use the database (yet) so this health check_
+_is purely demonstrating the capability of creating a custom health check, but_
+_does **not** actually apply to the health of this service._
+
+2. Update the return statements to include a status of `UP` or `DOWN` depending on
+whether or not an exception occurred connecting to the database:
+
+```java
+try {
+    EntityManager entityManager = entityManagerFactory.createEntityManager();
+    Query q = entityManager.createNativeQuery("select 1");
+    q.getFirstResult();
+   //TODO return status of UP
+   return Health.up().build();
+}catch(Exception e) {
+  //TODO return status of DOWN
+  return Health.down(e).build();
+}
+```
+3. Save the file.
+
 ## Update the Hola Service to Call the Aloha Service
+In order to support one microservice calling the other, we need an HTTP client
+implementation to make the HTTP request call.  In camel this is provided by the
+`http4` component.  This component provides HTTP based endpoints for calling
+external HTTP resources.  It leverages the Apache `HttpClient` to make these
+calls.
 
 ### Update the pom.xml file to use the `camel-http4` component.
 
@@ -193,7 +241,7 @@ from("direct:callAloha")
   .removeHeader(Exchange.HTTP_URI)
 ```
 
-2. Set the header value `Exchange.HTTP_PATH`using the `header.name` value that
+2. Set the header value `Exchange.HTTP_PATH` using the `header.name` value that
 was passed into the `hola-chained` endpoint originally to forward the name on
 to the `aloha-service`.
 
@@ -216,35 +264,6 @@ from("direct:callAloha")
   //TODO use the http4 component instead of mock
   .to("http4:"+alohaHost +":"+alohaPort+"/camel/aloha");
 ```
-
-## Implement a custom health check to verify database connectivity
-
-1. Open the `DatabaseHealthCheck.java` file in the `hola-service` project. This
-class is responsible for ensuring that there is a connection to the database.
-This class implements the `HealthIndicator` interface, which the Spring Boot
-Actuator starter provides. The `HealthIndicator` interface requires a single
-method named `health()`.
-
-Note: This service doesn't actually use the database (yet) so this health check
-is purely demonstrating the capability of the health check, but doesn't actually
-apply to the health of this service.
-
-2. Update the return statements to include a status of `UP` or `DOWN` depending on
-whether or not an exception occurred connecting to the database:
-
-```java
-try {
-    EntityManager entityManager = entityManagerFactory.createEntityManager();
-    Query q = entityManager.createNativeQuery("select 1");
-    q.getFirstResult();
-   //TODO return status of UP
-   return Health.up().build();
-}catch(Exception e) {
-  //TODO return status of DOWN
-  return Health.down(e).build();
-}
-```
-3. Save the file.
 
 ## Test the Services
 
@@ -395,8 +414,8 @@ endpoints.
 
 ## Extra Credit
 
-Fix the service's health check! Start a mysql instance and update the
+Fix the service's health check! Start a MySQL database instance and update the
 `camel-context.xml` file to use the correct connection and credentials.
 
-Even more extra credit, store all of the names into your mysql database.
+Even more extra credit, store all of the names into your MySQL database.
 Print out data about the users in a new endpoint.
