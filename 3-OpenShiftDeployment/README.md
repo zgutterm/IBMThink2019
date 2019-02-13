@@ -1,4 +1,4 @@
-# Deploying Microservices with Red Hat Fuse on OpenShift
+# Deploying Camel Microservices with OpenShift
 
 ## Introduction
 In this lab, you will deploy two simple example microservices, a
@@ -114,7 +114,7 @@ NAME            READY     STATUS    RESTARTS   AGE
 mysql-1-x7vg8   1/1       Running   0          2m
 ```
 Wait until you see the mysql pod without `build` or `deploy` in the name is in a
-`STATUS` of `Running` and `Ready` lists `1/1`.
+`STATUS` of `Running` and `Ready` lists `1/1`. Press `Ctl+C` to stop watching the pods.
 _Note: Your pod will have a different name than the one shown in the previous example._
 
 3. Copy the name of the pod onto the clipboard and use the `oc rsync` command to
@@ -310,33 +310,8 @@ _Note: Your personal URL will be different from the one shown above_
 
 ## Prepare the Maven Fabric8 Plugin - `catalog-service`
 
-1. Open the `pom.xml` file for the `catalog-service`. Include the
-`openshift/java` ImageStream name in the `<from>` element in the plugin
-definition:
 
-```xml
-...
-<plugins>
-  <plugin>
-    <groupId>io.fabric8</groupId>
-    <artifactId>fabric8-maven-plugin</artifactId>
-    <version>${fabric8.maven.plugin.version}</version>
-    <configuration>
-      <generator>
-        <config>
-          <spring-boot>
-            <!-- TODO: configure the image stream name -->
-            <fromMode>istag</fromMode>
-            <from>openshift/java</from>
-          </spring-boot>
-        </config>
-      </generator>
-    </configuration>
-    <executions>
-...
-```
-
-2. In the `catalog-service` open the `src/main/fabric8/deployment.yml` file.
+In the `catalog-service` open the `src/main/fabric8/deployment.yml` file.
 Update the readiness probe and the liveness probe to both use path `/health`
 and port `8182`:
 
@@ -374,7 +349,7 @@ you.
 ## Complete the `catalog-service` Camel Routes
 
 ### Update the `application.properties` file to use OCP service discovery
-1. Open the `application.properties` file located inside `src/main/resources`.
+Open the `application.properties` file located inside `src/main/resources`.
 Use the OCP provided environment variables to reference the host name and port
 number where the `vendor-service` will be located.
 ```properties
@@ -397,8 +372,6 @@ from("direct:getVendor")
    //TODO: Add the catalog_vendor_id header
   .setHeader(Exchange.HTTP_PATH,simple("${header.catalog_vendor_id}"))
   .setHeader(Exchange.HTTP_METHOD, simple("GET"))
-  //TODO: Invoke the vendor-service microservice
-  .to("http4:"+ vendorHost +":"+ vendorPort +"/camel/vendor")
 ```
 The `http4` component uses the `Exchange.HTTP_PATH` header to build the URL it
 will call when it sends a request to the `vendor-service`.
@@ -489,7 +462,7 @@ _Note: Your personal URL will be different from the one shown above_
 
 
 ## Test the microservices
-
+_Note: Remember to use `oc status` to see the hostnames of your services!_
 1. Wait for the application pod to be ready and running.
 
 Run the oc get pod command until the output resembles the following:
@@ -503,22 +476,22 @@ vendor-service-1-w62kv        1/1       Running     0          13m
 vendor-service-s2i-1-build    0/1       Completed   0          13m
 ```
 
-2. Send an HTTP GET to http://vendor-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/vendor/1.
+2. Send an HTTP GET to http://{YOURVENDORHOST}/camel/vendor/1.
 This returns a `200 OK` HTTP response code. The response includes the JSON data
 about the vendor with ID of 1:
 
 ```sh
-[student@workstation catalog-service]$ curl -si http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/vendor/1
+[student@workstation catalog-service]$ curl -si http://{YOURVENDORHOST}/camel/vendor/1
 {"id":1,"name":"Bookmart, Inc."}
 
 ```
 
-3. Send an HTTP `GET` to http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/catalog/1.
+3. Send an HTTP `GET` to http://{YOURCATALOGHOST}/camel/catalog/1.
 This returns a `200 OK` HTTP response code. The response includes the information
 about the catalog item with ID of 1:
 
 ```sh
-[student@workstation catalog-service]$ curl -si http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/catalog/1
+[student@workstation catalog-service]$ curl -si http://{YOURCATALOGHOST}/camel/catalog/1
 HTTP/1.1 200 OK
 ...
 {"id":1,"description":"description 1","author":"Lt. Howard Payson","vendorName":"Bookmart, Inc."}
@@ -532,17 +505,17 @@ HTTP/1.1 200 OK
 deploymentconfig "vendor-service" scaled
 ```
 
-5. Send an HTTP GET to http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/catalog/1.
+5. Send an HTTP GET to http://{YOURCATALOGHOST}/camel/catalog/1.
 This returns a `500 Error` HTTP response code. Look at the Response body:
 
 ```sh
-[student@workstation catalog-service]$ curl -si http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/catalog/1
+[student@workstation catalog-service]$ curl -si http://{YOURCATALOGHOST}/camel/catalog/1
 ...
 ERROR Locating Vendor
 ```
 
-6. Send 3 more of the same HTTP request until you observe the circuit breaker
-working and responses returning immediately instead of waiting for the requests
+6. Send 3 more of the same HTTP request. Notice that the circuit breaker opens
+and responses return immediately instead of waiting for the requests
 to timeout.
 
 7.  Run the `oc scale` command to scale the number of pods running the
@@ -553,11 +526,11 @@ to timeout.
 deploymentconfig "vendor-service" scaled
 ```
 
-8. Re-test sending an HTTP `GET` to http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/catalog/1.
+8. Wait until the vender service is running again and then re-test sending an HTTP `GET` to http://{YOURCATALOGHOST}/camel/catalog/1.
 This now again returns a `200 OK` HTTP response code.
 
 ```sh
-[student@workstation catalog-service]$ curl -si http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/catalog/1
+[student@workstation catalog-service]$ curl -si http://{YOURCATALOGHOST}/camel/catalog/1
 HTTP/1.1 200 OK
 ...
 {"id":1,"description":"description 1","author":"Lt. Howard Payson","vendorName":"Bookmart, Inc."}
