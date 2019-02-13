@@ -29,9 +29,9 @@ spec:
             failureThreshold: 3
             httpGet:
               #TODO change the liveness probe path to '/health'
-              path: /health
+              path: FIXME
               #TODO change the liveness probe port to 8182
-              port: 8182
+              port: FIXME
               scheme: HTTP
             initialDelaySeconds: 30
             periodSeconds: 10

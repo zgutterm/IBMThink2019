@@ -52,9 +52,8 @@ public class RestRouteBuilder extends RouteBuilder {
 				//TODO: Invoke the vendor-service microservice
 
 				.process(new VendorProcessor())
-			.onFallback()
-				.transform(constant(VENDOR_ERROR_MSG))
-			.endHystrix();
+			 //TODO Add fallback for circuit breaker
+			
 
 		from("direct:processVendorResult")
 			.log("#{body}")
