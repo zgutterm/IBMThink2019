@@ -477,6 +477,16 @@ to timeout.
 `vendor-service` microservice to `1`:
 
 ```sh
-[student@workstation catalog-service]$ oc scale --replicas=0 dc vendor-service
+[student@workstation catalog-service]$ oc scale --replicas=1 dc vendor-service
 deploymentconfig "vendor-service" scaled
+```
+
+8. Re-test sending an HTTP `GET` to http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/catalog/1.
+This now again returns a `200 OK` HTTP response code. 
+
+```sh
+[student@workstation catalog-service]$ curl -si http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/catalog/1
+HTTP/1.1 200 OK
+...
+{"id":1,"description":"description 1","author":"Lt. Howard Payson","vendorName":"Bookmart, Inc."}
 ```
