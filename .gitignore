@@ -6,6 +6,7 @@
 .project
 .DS_Store
 .classpath
+target/
 # Log file
 *.log
 
