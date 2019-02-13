@@ -110,6 +110,8 @@ public void configure() throws Exception {
 
 ### Populate the orders/incoming directory
 
+``If you are using a Windows machine, you need to manually copy the files from IBMThink2019/1-CreatingBasicRoutes/orders into a new folder IBMThink2019/1-CreatingBasicRoutes/processing-orders/orders/incoming/. Rename one of the files to noop-1.xml and move on to the next step.``
+
 In a terminal, navigate to the `IBMThink2019/1-CreatingBasicRoutes/processing-orders`
 and run the `setup-data.sh` script:
 
@@ -131,22 +133,21 @@ noop-1.xml  order-2.xml  order-3.xml  order-4.xml  order-5.xml  order-6.xml
 ### Test the Route
 
 1. Run the route by using the `camel:run` Maven goal:
-
 ```sh
 [student@workstation processing-orders]$ mvn clean camel:run
 ```
+
 This goal runs your Camel Spring configurations in a forked JVM from Maven.
 This makes it very easy to spin up and test your routing rules without having
 to write a `main(…)` method; it also lets you create multiple JARs to host
 different sets of routing rules and easily test them independently.
 
-How this works is that the plugin compiles the source code in the Maven project,
+The plugin compiles the source code in the Maven project,
 then boots up a Spring `ApplicationContext` using the XML confiuration files
 found on the classpath at `META-INF/spring/*.xml`.
 
 2. Open a new terminal window and inspect the `orders/outgoing` folder to verify
 that only order files are available:
-
 ```sh
 [student@workstation processing-orders]$ ls orders/outgoing
 order-2.xml  order-3.xml  order-4.xml  order-5.xml  order-6.xml
@@ -156,16 +157,16 @@ _Notice that the file named `noop-1.xml` is not present._
 
 3. Run the `./duplicate-files.sh` script in the `processing-orders` directory to
 recreate the files to trigger a duplicate file error.
-
 ```sh
 [student@workstation processing-orders]$ ./duplicate-files.sh
 ...
 'Duplication complete!'
 ```
 
+_If you are running this exercise on a windows machine, rather than running this script, copy the files from IBMThink2019/1-CreatingBasicRoutes/orders into IBMThink2019/1-CreatingBasicRoutes/processing-orders/orders/incoming/ again_
+
 4. Return to the terminal running the Camel route to see the
 `GenericFileOperationException` as a result of the duplicate files.
-
 ```sh
 INFO  Received hang up - stopping the main instance.
 ...

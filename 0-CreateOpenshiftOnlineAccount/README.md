@@ -38,8 +38,8 @@ You can do so by going to 'About' section in web console.
 
 ![openshift-online-about.png](./../images/00-lab-images/oc-cli.png)
 
-1. Go to your webconsole, link similar to https://console.starter-ca-central-1.openshift.com/console/command-line
-and select 'Command Line Tools' from the drop down when clicking the question mark.
+1. Go to the command line download page and select 'Command Line Tools' from the drop down when clicking the question mark. That page's link should be similar to https://{YOURCLUSTER}.openshift.com/console/command-line
+
 
 ![openshift-online-download-oc.png](./../images/00-lab-images/openshift-online-download-oc.png)
 

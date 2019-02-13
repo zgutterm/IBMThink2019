@@ -12,6 +12,6 @@ This lab will guide you to create your very first Red Hat Fuse-based microservic
 - Maven 3.5 or above (https://maven.apache.org/install.html)
 - Copy the provided settings.xml file to ~/.m2/settings.xml
 - JDK 1.8 or above (http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
-- Git (https://git-scm.com/download/win)
+- Git (https://git-scm.com/downloads)
 - Red Hat Developer Account (http://developers.redhat.com/register)
-- Request an OpenShfit Online Cluster (https://github.com/zgutterm/IBMThink2019/tree/master/0-CreateOpenshiftOnlineAccount)
+- Request an OpenShift Online Cluster (https://github.com/zgutterm/IBMThink2019/tree/master/0-CreateOpenshiftOnlineAccount)
