@@ -2,7 +2,7 @@
 
 ## Introduction
 In this lab, you will deploy two simple example microservices, a
-`catalog-service` and a `vendor service`.
+`catalog-service` and a `vendor-service`.
 
 The `vendor-service` REST service provides a single endpoint that retrieves
 vendor data from the bookstore database by ID. The data resides inside a MySQL
@@ -67,6 +67,13 @@ the `oc new-project` command:
 
 ```sh
 [student@workstation 3-OpenShiftDeployment]$ oc new-project review4-lab
+Now using project "review4" on server "https://api.starter-us-west-2.openshift.com:443".
+
+You can add applications to this project with the 'new-app' command. For example, try:
+
+    oc new-app centos/ruby-22-centos7~https://github.com/openshift/ruby-ex.git
+
+to build a new example application in Ruby.
 ```
 
 In OpenShift projects are a tool that allows a community of users to organize
@@ -77,6 +84,12 @@ Users must be given access to projects by administrators, or if allowed to
 create projects, automatically have access to their own projects.
 
 ## Deploy a MySQL Pod
+For this example, both of the microservices will use the same MySQL database as
+backend storage.  In this section, you will deploy a MySQL container as a pod on
+your OpenShift Online cluster, and then populate the database with some sample
+data for the `CatalogItem` and `Vendor` tables.
+
+The sample data includes 33 `CatalogItem` enrtries and 2 `Vendor` entries.
 
 1. Create the MySQL pod using the following `oc new-app` command:
 
@@ -91,7 +104,7 @@ create projects, automatically have access to their own projects.
 Here you create a new MySQL pod, using the `openshift/mysql` ImageStream,
 which provides a base MySQL container image which is then customized when the
 container starts up using the `MYSQL_USER`, `MYSQL_PASSWORD`, and
-`MYSQL_DATABASE` environment variables supported by the container image
+`MYSQL_DATABASE` environment variables supported by the container image that is
 referenced by the `openshift/mysql` ImageStream.
 
 2. Make sure your pod is running using the `oc get pods -w` command:
@@ -100,9 +113,9 @@ referenced by the `openshift/mysql` ImageStream.
 NAME            READY     STATUS    RESTARTS   AGE
 mysql-1-x7vg8   1/1       Running   0          2m
 ```
+Wait until you see the mysql pod without `build` or `deploy` in the name is in a
+`STATUS` of `Running` and `Ready` lists `1/1`.
 _Note: Your pod will have a different name than the one shown in the previous example._
-
-
 
 3. Copy the name of the pod onto the clipboard and use the `oc rsync` command to
 push the database initialization script into the pod.
@@ -117,7 +130,7 @@ total size is 7,273  speedup is 0.98
 ```
 _Note: Be sure to swap in your pod's name in the previous command_
 
-4. Use the `oc rsh` command to run the SQL script inside the pod.
+4. Use the `oc rsh` command to gain access to a remote shell inside the pod:
 ```sh
 [student@workstation 3-OpenShiftDeployment]$ oc rsh mysql-1-x7vg8
 sh-4.2$
@@ -129,9 +142,23 @@ _Note: Be sure to swap in your pod's name in the previous command_
 sh-4.2$ mysql -ubookstore -predhat bookstore < /tmp/create-db.sql
 ```
 
-## Prepare the Maven Fabric8 Plugin - Vendor Service
+## Prepare the Fabric8 Maven Plugin - `vendor-service`
 
-1. Open the `pom.xml` file for the `vendor-service`. Include the
+The `fabric8-maven-plugin` (f8-m-p) brings your Java applications on to
+Kubernetes and OpenShift. It provides a tight integration into Maven and
+benefits from the build configuration already provided. This plugin focus on two
+tasks: Building Docker images and creating Kubernetes and OpenShift resource
+descriptors.
+
+The two main areas that require configuration when using this plugin are:
+- The `pom.xml` file, where you include the plugin dependency and configuration.
+- The YAML or JSON based resource descriptor templates used to create OpenShift
+or Kubernetes resources.  These are located in the `src/main/fabric8` directory
+of the projects.
+
+1. Configure the plugin in the `pom.xml` file.
+
+Open the `pom.xml` file for the `vendor-service`. Include the
 `openshift/java` ImageStream name in the `<from>` element in the plugin
 definition:
 
@@ -158,10 +185,16 @@ definition:
 ```
 In OpenShift an `ImageStream` represents a pointer to a specific version of a
 container image.  In this example, the `openshift/java` image stream contains a
-basic JVM environment oriented towards JAR-based deployments such as Spring Boot.
+basic JVM environment oriented towards JAR-based deployments such as Spring
+Boot.  This configuration specifically tells the Fabric8 Maven plugin to use the
+`openshift/java` base image as the starting point for building the
+`vendor-service` container that will get deployed on the OpenShift cluster.
 
 
-2. In the `vendor-service` open the `src/main/fabric8/deployment.yml` file.
+2. Configure the liveness and readiness probes that OpenShift will use to
+montior the microservice in the `DeploymentConfig`.
+
+In the `vendor-service` open the `src/main/fabric8/deployment.yml` file.
 Update the readiness probe and the liveness probe to both use path `/health`
 and port `8181`:
 
@@ -191,7 +224,7 @@ livenessProbe:
   successThreshold: 1
   timeoutSeconds: 5
 ```
-The liveness and readiness probes are used by Kubernetes to determine if a pod
+The liveness and readiness probes are used by Kubernetes/OpenShift to determine if a pod
 is healthy and ready to serve requests.  Pods that do not return an HTTP status
 of `200 OK` when their probes are called by Kuberenetes will not be used to serve
 requests.  Kubernetes will also attempt to kill and restart unhealthy containers
@@ -200,7 +233,32 @@ restart.
 
 
 
-4. In the same package, open the `route.yml` file:
+4. Review the `Service` definition that fabric8 will use to create a `Service`
+that provides load balancing between all the pods running the `vendor-service`
+container.
+
+In the same directory, open the `service.yml` file:
+
+```yaml
+---
+apiVersion: "v1"
+kind: "Service"
+spec:
+  ports:
+    - name: 8081-tcp
+      protocol: TCP
+      port: 8081
+      targetPort: 8081
+```
+This `Service` tells OpenShift to access the Pods created for the
+`vendor-service` container image using port `8081` as well as to listen on port
+`8081`.
+
+
+5. Review the `Route` definition that fabric8 will use to create a `Route` route
+which provides external access to the `vendor-service` `Service` endpoint.
+
+In the same directory, open the `route.yml` file:
 
 ```yaml
 spec:
@@ -214,7 +272,7 @@ This `Route` tells OpenShift to expose the OpenShift service object for the
 `vendor-service` application using port 8081.
 
 
-## Deploy the Vendor Service
+## Deploy the `vendor-service`
 
 Use the Fabric8 Maven Plug-in to build a container image for the Spring Boot
 application and create the required resources on OpenShift.
@@ -231,14 +289,14 @@ application and create the required resources on OpenShift.
 
 ```sh
 [student@workstation vendor-service]$ oc status
-In project ibm-think on server https://api.starter-us-west-2.openshift.com:443
+In project review4 on server https://api.starter-us-west-2.openshift.com:443
 
 svc/mysql - 172.30.150.30:3306
   dc/mysql deploys openshift/mysql:5.7
     deployment #1 deployed 8 hours ago - 1 pod
 
 http://vendor-service-review4.7e14.starter-us-west-2.openshiftapps.com to pod port 8081 (svc/vendor-service)
-  dc/vendor-service-solution deploys istag/vendor-service:1.0 <-
+  dc/vendor-service deploys istag/vendor-service:1.0 <-
     bc/vendor-service-s2i source builds uploaded code on openshift/java:latest
     deployment #1 running for 6 seconds - 0/1 pods
 
@@ -248,8 +306,9 @@ In this example the `vendor-service` can be reached from outside the OpenShift c
 using the following URL:
 http://vendor-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/vendor/{id}
 
+_Note: Your personal URL will be different from the one shown above_
 
-## Prepare the Maven Fabric8 Plugin - Catalog Service
+## Prepare the Maven Fabric8 Plugin - `catalog-service`
 
 1. Open the `pom.xml` file for the `catalog-service`. Include the
 `openshift/java` ImageStream name in the `<from>` element in the plugin
@@ -307,42 +366,30 @@ livenessProbe:
   successThreshold: 1
   timeoutSeconds: 5
 ```
-
-4. In the same package, open the `route.yml` file:
-
-```yaml
-spec:
-  port:
-    targetPort: 8082
-  to:
-    kind: Service
-    name: ${project.artifactId}
-```
-This `Route` tells OpenShift to expose the OpenShift service object for the
-`catalog-service` application using port 8082.
+The `catalog-service` also has a `route.yml` and `service.yml` similar to the
+`vendor-service` feel free to review those now, but they have been created for
+you.
 
 
-## Finish the Catalog-Service Routes
+## Complete the `catalog-service` Camel Routes
 
-### Update the application.properties file to use OCP service discovery
+### Update the `application.properties` file to use OCP service discovery
 1. Open the `application.properties` file located inside `src/main/resources`.
 Use the OCP provided environment variables to reference the host name and port
 number where the `vendor-service` will be located.
 ```properties
-vendorHost = ${VENDOR_SERVICE_SOLUTION_SERVICE_HOST}
-vendorPort = ${VENDOR_SERVICE_SOLUTION_SERVICE_PORT}
+vendorHost = ${VENDOR_SERVICE_SERVICE_HOST}
+vendorPort = ${VENDOR_SERVICE_SERVICE_PORT}
 ```
-In OpenShift, a `Service` object acts a load balancer to all of the `Pods`
-that are running a specific container image.  In this example, the `fabric8`
-Maven plugin creates a `Service` that fronts the `vendor-service` pods.  This
-service also automatically creates environment variables for the host and port
-of the `vendor-service`.
 
-### Add a connection to the vendor service
-1. Update the `RestRouteBuilder` class to invoke the `vendor-service`
+### Add a connection to the `vendor-service`
+Update the `RestRouteBuilder` class to invoke the `vendor-service`
 microservice using the Camel HTTP4 component and the provided `vendorHost` and
-`vendorPort` variables. Recover the vendor id from the `catalog_vendor_id`
-header set by the `SqlProcessor` processor implementation:
+`vendorPort` variables.
+
+1. Recover the vendor id from the `catalog_vendor_id`
+header set by the `SqlProcessor` processor implementation, and then set this
+value in the `Exchange.HTTP_PATH` header:
 
 ```java
 from("direct:getVendor")
@@ -353,15 +400,16 @@ from("direct:getVendor")
   //TODO: Invoke the vendor-service microservice
   .to("http4:"+ vendorHost +":"+ vendorPort +"/camel/vendor")
 ```
+The `http4` component uses the `Exchange.HTTP_PATH` header to build the URL it
+will call when it sends a request to the `vendor-service`.
 
-2. Update the `RestRouteBuilder` class to invoke the `VendorProcessor` processor
-right after the HTTP4 component. This processor adds the vendor name to a Camel
-header:
+2. Update the `RestRouteBuilder` class to use the `http4` component to call the
+`vendor-service`.  Use the `vendorHost` and `vendorPort` variables which have
+been set from the values in the `application.properties` file.
 
 ```java
 //TODO: Invoke the vendor-service microservice
 .to("http4:"+ vendorHost +":"+ vendorPort +"/camel/vendor")
-//TODO: Invoke the VendorProcessor
 .process(new VendorProcessor())
 ```
 
@@ -387,15 +435,14 @@ failing.
 //TODO: Add circuit breaker pattern
 .hystrix()
   .hystrixConfiguration()
-    .executionTimeoutInMilliseconds(3000)
-    .circuitBreakerRequestVolumeThreshold(2)
-    .metricsRollingPercentileWindowInMilliseconds(60000)
-    .circuitBreakerSleepWindowInMilliseconds(20000)
-    .circuitBreakerErrorThresholdPercentage(50)
+    .executionTimeoutInMilliseconds(3000) // 3 second timeout
+    .circuitBreakerRequestVolumeThreshold(2) // 2 request minimum
+    .metricsRollingPercentileWindowInMilliseconds(60000) // 60 second rolling window
+    .circuitBreakerSleepWindowInMilliseconds(20000) // 20 second sleep when opened
+    .circuitBreakerErrorThresholdPercentage(50) // 50 percent error threshold to open
   .end()
   //TODO: Invoke the vendor-service microservice
   .to("http4:"+ vendorHost +":"+ vendorPort +"/camel/vendor")
-  //TODO: Invoke the VendorProcessor
   .process(new VendorProcessor())
 .onFallback()
   .transform(constant(VENDOR_ERROR_MSG))
@@ -403,10 +450,11 @@ failing.
 ```
 
 
-## Deploy the Catalog Service
+## Deploy the `catalog-service`
 
-Use the Fabric8 Maven Plug-in to build a container image for the Spring Boot
-application and create the required resources on OpenShift.
+Use the Fabric8 Maven Plug-in to build a container image for the
+`catalog-service` Spring Boot application and create the required resources on
+OpenShift.
 
 1. Navigate to the `review4/catalog-service` folder and invoke the
 `fabric8:deploy` Maven goal, enabling the `openshift` Maven profile:
@@ -414,6 +462,30 @@ application and create the required resources on OpenShift.
 ```sh
 [student@workstation catalog-service]$ mvn -Popenshift fabric8:deploy
 ```
+
+2. Capture the hostname assigned to OpenShift Route that fronts the
+`catalog-service`.  Use the `oc status` command to find the hostname:
+
+```sh
+[student@workstation catalog-service]$ oc status
+In project review4 on server https://api.starter-us-west-2.openshift.com:443
+
+svc/mysql - 172.30.150.30:3306
+  dc/mysql deploys openshift/mysql:5.7
+    deployment #1 deployed 8 hours ago - 1 pod
+
+http://vendor-service-review4.7e14.starter-us-west-2.openshiftapps.com to pod port 8081 (svc/vendor-service)
+  dc/vendor-service deploys istag/vendor-service:1.0 <-
+    bc/vendor-service-s2i source builds uploaded code on openshift/java:latest
+    deployment #1 running for 6 seconds - 0/1 pods
+
+View details with 'oc describe <resource>/<name>' or list everything with 'oc get all'.
+```
+In this example the `catalog-service` can be reached from outside the OpenShift cluster
+using the following URL:
+http://vendor-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/vendor/{id}
+
+_Note: Your personal URL will be different from the one shown above_
 
 
 ## Test the microservices
@@ -482,7 +554,7 @@ deploymentconfig "vendor-service" scaled
 ```
 
 8. Re-test sending an HTTP `GET` to http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/catalog/1.
-This now again returns a `200 OK` HTTP response code. 
+This now again returns a `200 OK` HTTP response code.
 
 ```sh
 [student@workstation catalog-service]$ curl -si http://catalog-service-review4.7e14.starter-us-west-2.openshiftapps.com/camel/catalog/1
