@@ -28,7 +28,7 @@ begin creating Camel routes.
 
 1. Navigate to the `pom.xml` in the root directory of the project.
 
-2. Add the `camel-core` and `camel-sprint` dependencies to the project
+2. Add the `camel-core` and `camel-spring` dependencies to the project
 
 ```xml
 <!-- TODO add camel dependencies -->
